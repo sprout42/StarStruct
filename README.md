@@ -15,7 +15,7 @@ Getting Started
 Requirements
 ------------
 
-* Python 2.7+ or Python 3.2+
+* Python 3.4+
 
 Installation
 ------------
@@ -45,4 +45,3 @@ $ python
 >>> namedstruct.__version__
 ```
 
-NamedStruct doesn't do anything, it's a template.
