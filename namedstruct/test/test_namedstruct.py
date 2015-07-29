@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """Tests for the namedstruct class"""
 
@@ -33,18 +33,18 @@ class TestNamedstruct(unittest.TestCase):
 
         for name in [None, '', 1, dict(), list()]:
             with self.subTest(name):
-                with self.assertRaises(TypeError) as err:
+                msg = 'invalid name: {}'.format(name)
+                with self.assertRaises(TypeError, msg=msg):
                     struct.NamedStruct(name, self.teststruct)
-                self.assertEqual(err.msg, 'invalid name: {}'.format(name))
 
     def test_init_invalid_mode(self):
         """Test invalid NamedStruct modes."""
 
         for mode in ['=', 'stuff', 0, -1, 1]:
             with self.subTest(mode):
-                with self.assertRaises(TypeError) as err:
+                msg = 'invalid mode: {}'.format(mode)
+                with self.assertRaises(TypeError, msg=msg):
                     struct.NamedStruct('test', self.teststruct, mode)
-                self.assertEqual(err.msg, 'invalid mode: {}'.format(mode))
 
     @unittest.skip('invalid fields test not implemented')
     def test_init_invalid_fields(self):
@@ -58,7 +58,7 @@ class TestNamedstruct(unittest.TestCase):
         val = struct.NamedStruct('test', [])
         self.assertEqual(val._tuple._fields, ())  # pylint: disable=W0212
         # default mode is 'Native', or '='
-        self.assertEqual(val._fmt, '=')  # pylint: disable=W0212
+        self.assertEqual(val._struct.format, b'=')  # pylint: disable=W0212
 
     def test_modes(self):
         """Test all valid NamedStruct modes."""
@@ -69,10 +69,11 @@ class TestNamedstruct(unittest.TestCase):
             with self.subTest(mode):
                 val = struct.NamedStruct('test', self.teststruct, mode)
                 self.assertEqual(val._tuple._fields, tuple(testfields))  # pylint: disable=W0212
-                self.assertEqual(val._fmt, mode.value + 'b3xHx10sx')  # pylint: disable=W0212
+                fmt = '{}b3xHx10sx'.format(mode.value)
+                self.assertEqual(val._struct.format, fmt.encode())  # pylint: disable=W0212
                 self.assertIsNot(val._tuple, testtuple)  # pylint: disable=W0212
                 self.assertEqual(val._tuple._fields, testtuple._fields)  # pylint: disable=W0212
-                self.assertEqual(val.calcsize(), 18)
+                self.assertEqual(val.size(), 18)
 
     @unittest.skip('pack test not implemented')
     def test_pack(self):

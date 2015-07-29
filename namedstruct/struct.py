@@ -34,15 +34,16 @@ class NamedStruct(object):
         if not isinstance(mode, Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
-        self._fmt = mode.value + ''.join([x[1] for x in fields])
+        fmt = mode.value + ''.join([x[1] for x in fields])
 
         # Validate that the format specifiers are valid struct formats, this
         # doesn't have to be done now because the format will be checked when
         # any struct functions are called, but it's better to inform the user of
         # any errors earlier.
-        # The easiest way to perform this check is to just let struct do it by
-        # calling the struct.calcsize() function.
-        struct.calcsize(self._fmt)
+        # The easiest way to perform this check is to create a "Struct" class 
+        # instance, this will also increase the efficiency of all struct related 
+        # functions called.
+        self._struct = struct.Struct(fmt)
 
         # Make a list of fields to place into the named tuple leaving out any
         # fields that have an encoding of '*x'
@@ -54,29 +55,29 @@ class NamedStruct(object):
 
         if not isinstance(val, self._tuple):
             raise TypeError('invalid val: {}'.format(val))
-        return struct.pack(self._fmt, *val)
+        return self._struct.pack(*val)
 
     def pack(self, **kwargs):
         """Pack the provided values using the initialized format."""
 
-        return struct.pack(self._fmt, *self._tuple(**kwargs))
+        return self._struct.pack(*self._tuple(**kwargs))
 
     def pack_into(self, buf, offset, **kwargs):
         """Pack the provided values into the supplied buffer."""
 
-        return struct.pack_into(self._fmt, buf, offset, *self._tuple(**kwargs))
+        return self._struct.pack_into(buf, offset, *self._tuple(**kwargs))
 
     def unpack(self, buf):
         """Unpack the buffer using the initialized format."""
 
-        return self._tuple(*struct.unpack(self._fmt, buf))
+        return self._tuple(*self._struct.unpack(buf))
 
     def unpack_from(self, buf, offset=0):
         """Unpack data from the supplied buffer using the initialized format."""
 
-        return self._tuple(*struct.unpack_from(self._fmt, buf, offset))
+        return self._tuple(*self._struct.unpack_from(buf, offset))
 
-    def calcsize(self):
+    def size(self):
         """Calculate the space required by the initialized format."""
 
-        return struct.calcsize(self._fmt)
+        return self._struct.size
