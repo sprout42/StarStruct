@@ -5,8 +5,9 @@
 import collections
 import unittest
 
-from namedstruct import struct
+from namedstruct import struct as ns
 from namedstruct import modes
+import struct
 
 
 class TestNamedstruct(unittest.TestCase):
@@ -35,7 +36,7 @@ class TestNamedstruct(unittest.TestCase):
             with self.subTest(name):
                 msg = 'invalid name: {}'.format(name)
                 with self.assertRaises(TypeError, msg=msg):
-                    struct.NamedStruct(name, self.teststruct)
+                    ns.NamedStruct(name, self.teststruct)
 
     def test_init_invalid_mode(self):
         """Test invalid NamedStruct modes."""
@@ -44,18 +45,30 @@ class TestNamedstruct(unittest.TestCase):
             with self.subTest(mode):
                 msg = 'invalid mode: {}'.format(mode)
                 with self.assertRaises(TypeError, msg=msg):
-                    struct.NamedStruct('test', self.teststruct, mode)
+                    ns.NamedStruct('test', self.teststruct, mode)
 
-    @unittest.skip('invalid fields test not implemented')
     def test_init_invalid_fields(self):
         """Test invalid NamedStruct fields."""
 
-        self.fail('not implemented')
+        """
+        Invalid fields are format specifiers that are not accepted by the
+        Struct class.  Valid fields are identified in here:
+        https://docs.python.org/3/library/ns.html#format-characters
+
+        Append the invalid field to the end of the standard test structure and
+        ensure it fails.  Test invalid characters and an invalid trailing
+        number.
+        """
+        for field in [ 'a', '#', 'Z', '5' ]:
+            with self.subTest(field):
+                invalid_struct = self.teststruct + [('invalid', field)]
+                with self.assertRaises(struct.error, msg='bad char in struct format'):
+                    ns.NamedStruct('test', invalid_struct)
 
     def test_init_empty_struct(self):
         """Test an empty NamedStruct."""
 
-        val = struct.NamedStruct('test', [])
+        val = ns.NamedStruct('test', [])
         self.assertEqual(val._tuple._fields, ())  # pylint: disable=W0212
         # default mode is 'Native', or '='
         self.assertEqual(val._struct.format, b'=')  # pylint: disable=W0212
@@ -67,7 +80,7 @@ class TestNamedstruct(unittest.TestCase):
         testtuple = collections.namedtuple('test', testfields)
         for mode in modes.Mode:
             with self.subTest(mode):
-                val = struct.NamedStruct('test', self.teststruct, mode)
+                val = ns.NamedStruct('test', self.teststruct, mode)
                 self.assertEqual(val._tuple._fields, tuple(testfields))  # pylint: disable=W0212
                 fmt = '{}b3xHx10sx'.format(mode.value)
                 self.assertEqual(val._struct.format, fmt.encode())  # pylint: disable=W0212
