@@ -127,13 +127,13 @@ class TestNamedstruct(unittest.TestCase):
         testobj = ns.NamedStruct('little_endian', self.teststruct, modes.Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest('little endian {}'.format(idx)):
-                # TODO: pack_into(), _pack_from_tuple()
+                # TODO: pack_into()
                 self.assertEqual(self.testbytes['little'][idx], testobj.pack(**self.testvalues[idx]))
 
         testobj = ns.NamedStruct('big_endian', self.teststruct, modes.Mode.Big)
         for idx in range(len(self.testvalues)):
             with self.subTest('big endian {}'.format(idx)):
-                # TODO: pack_into(), _pack_from_tuple()
+                # TODO: pack_into()
                 self.assertEqual(self.testbytes['big'][idx], testobj.pack(**self.testvalues[idx]))
 
     def test_pack_invalid(self):

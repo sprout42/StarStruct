@@ -50,13 +50,6 @@ class NamedStruct(object):
         fields = [x[0] for x in fields if x[1][-1] != 'x']
         self._tuple = collections.namedtuple(name, fields)
 
-    def _pack_from_tuple(self, val):
-        """Pack the object provided using the initialized format."""
-
-        if not isinstance(val, self._tuple):
-            raise TypeError('invalid val: {}'.format(val))
-        return self._struct.pack(*val)
-
     def pack(self, **kwargs):
         """Pack the provided values using the initialized format."""
 
