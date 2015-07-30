@@ -27,25 +27,48 @@ class TestNamedstruct(unittest.TestCase):
         ('pad', 'x'),   # 1 pad byte
         ('c', '10s'),   # 10 byte string
         ('d', 'x'),     # 1 pad byte
+        ('e', 'L'),     # unsigned long: 0, 2^32-1
     ]
+
+    testvalues = [
+        { 'a': -128, 'b': 0,     'c': b'0123456789',        'e': 0 },
+        { 'a': 127,  'b': 65535, 'c': b'abcdefghij',        'e': 0xFFFFFFFF },
+        { 'a': -1,   'b': 32767, 'c': b'\n\tzyx\0\0\0\0\0', 'e': 0x7FFFFFFF },
+        { 'a': 100,  'b': 100,   'c': b'a0b1c2d3e4',        'e': 10000 },
+    ]
+
+    testbytes = {
+        'little': [
+            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00',
+            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF',
+            b'\xFF\x00\x00\x00\xFF\x7F\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\x7F',
+            b'\x64\x00\x00\x00\x64\x00\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x10\x27\x00\x00',
+        ],
+        'big': [
+            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00',
+            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF',
+            b'\xFF\x00\x00\x00\x7F\xFF\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\x7F\xFF\xFF\xFF',
+            b'\x64\x00\x00\x00\x00\x64\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x00\x00\x27\x10',
+        ],
+    }
 
     def test_init_invalid_name(self):
         """Test invalid NamedStruct names."""
 
         for name in [None, '', 1, dict(), list()]:
             with self.subTest(name):
-                msg = 'invalid name: {}'.format(name)
-                with self.assertRaises(TypeError, msg=msg):
+                with self.assertRaises(TypeError) as cm:
                     ns.NamedStruct(name, self.teststruct)
+                self.assertEqual(str(cm.exception), 'invalid name: {}'.format(name))
 
     def test_init_invalid_mode(self):
         """Test invalid NamedStruct modes."""
 
         for mode in ['=', 'stuff', 0, -1, 1]:
             with self.subTest(mode):
-                msg = 'invalid mode: {}'.format(mode)
-                with self.assertRaises(TypeError, msg=msg):
+                with self.assertRaises(TypeError) as cm:
                     ns.NamedStruct('test', self.teststruct, mode)
+                self.assertEqual(str(cm.exception), 'invalid mode: {}'.format(mode))
 
     def test_init_invalid_fields(self):
         """Test invalid NamedStruct fields."""
@@ -56,14 +79,24 @@ class TestNamedstruct(unittest.TestCase):
         https://docs.python.org/3/library/ns.html#format-characters
 
         Append the invalid field to the end of the standard test structure and
-        ensure it fails.  Test invalid characters and an invalid trailing
-        number.
+        ensure it fails.
         """
-        for field in [ 'a', '#', 'Z', '5' ]:
+        for field in [ 'a', '#', 'Z' ]:
             with self.subTest(field):
                 invalid_struct = self.teststruct + [('invalid', field)]
-                with self.assertRaises(struct.error, msg='bad char in struct format'):
+                with self.assertRaises(struct.error) as cm:
                     ns.NamedStruct('test', invalid_struct)
+                self.assertEqual(str(cm.exception), 'bad char in struct format')
+
+        """
+        Test invalid characters and an invalid trailing number.
+        """
+        field = '5'
+        with self.subTest('5'):
+            invalid_struct = self.teststruct + [('invalid', field)]
+            with self.assertRaises(struct.error) as cm:
+                ns.NamedStruct('test', invalid_struct)
+            self.assertEqual(str(cm.exception), 'repeat count given without format specifier')
 
     def test_init_empty_struct(self):
         """Test an empty NamedStruct."""
@@ -76,28 +109,76 @@ class TestNamedstruct(unittest.TestCase):
     def test_modes(self):
         """Test all valid NamedStruct modes."""
 
-        testfields = ['a', 'b', 'c']
+        testfields = ['a', 'b', 'c', 'e']
         testtuple = collections.namedtuple('test', testfields)
         for mode in modes.Mode:
             with self.subTest(mode):
                 val = ns.NamedStruct('test', self.teststruct, mode)
                 self.assertEqual(val._tuple._fields, tuple(testfields))  # pylint: disable=W0212
-                fmt = '{}b3xHx10sx'.format(mode.value)
+                fmt = '{}b3xHx10sxL'.format(mode.value)
                 self.assertEqual(val._struct.format, fmt.encode())  # pylint: disable=W0212
                 self.assertIsNot(val._tuple, testtuple)  # pylint: disable=W0212
                 self.assertEqual(val._tuple._fields, testtuple._fields)  # pylint: disable=W0212
-                self.assertEqual(val.size(), 18)
+                self.assertEqual(val.size(), 22)
 
-    @unittest.skip('pack test not implemented')
     def test_pack(self):
         """Test packing data for all NamedStruct formats."""
 
-        # TODO: pick at least 3 values for every field and verify that they can
-        # be packed in a variety of modes
-        # _pack_from_tuple()
-        # pack()
-        # pack_into()
-        self.fail('not implemented')
+        testobj = ns.NamedStruct('little_endian', self.teststruct, modes.Mode.Little)
+        for idx in range(len(self.testvalues)):
+            with self.subTest('little endian {}'.format(idx)):
+                # TODO: pack_into(), _pack_from_tuple()
+                self.assertEqual(self.testbytes['little'][idx], testobj.pack(**self.testvalues[idx]))
+
+        testobj = ns.NamedStruct('big_endian', self.teststruct, modes.Mode.Big)
+        for idx in range(len(self.testvalues)):
+            with self.subTest('big endian {}'.format(idx)):
+                # TODO: pack_into(), _pack_from_tuple()
+                self.assertEqual(self.testbytes['big'][idx], testobj.pack(**self.testvalues[idx]))
+
+    def test_pack_invalid(self):
+        """Test the error that occurs when attempting to pack invalid data."""
+
+        testobj = ns.NamedStruct('test', self.teststruct)
+        test_field_invalid_value = [
+            ('a',               -129, 'byte format requires -128 <= number <= 127'),
+            ('a',                128, 'byte format requires -128 <= number <= 127'),
+            ('b',                 -1, 'ushort format requires 0 <= number <= USHRT_MAX'),
+            ('b',         0xFFFF + 1, 'ushort format requires 0 <= number <= USHRT_MAX'),
+            ('c', 'not a bytestring', "argument for 's' must be a bytes object"),
+            ('c',                 42, "argument for 's' must be a bytes object"),
+            ('e',                 -1, 'argument out of range'),
+            ('e',     0xFFFFFFFF + 1, 'argument out of range'),
+        ]
+        for (field, value, errmsg) in test_field_invalid_value:
+            sub_test_msg = '{}={}'.format(field, value)
+            with self.subTest(sub_test_msg):
+                # start with a valid set of values
+                testvalues = self.testvalues[-1].copy()
+
+                # Set an invalid value
+                testvalues[field] = value
+
+                with self.assertRaises(struct.error) as cm:
+                    testobj.pack(**testvalues)
+                self.assertEquals(str(cm.exception), errmsg)
+
+    def test_pack_extra_fields(self):
+        """Test the error that occurs when attempting to pack unexpected fields."""
+
+        testobj = ns.NamedStruct('test', self.teststruct)
+        for field in ['aa', 'd', 'invalid']:
+            with self.subTest(field):
+                # start with a valid set of values
+                testvalues = self.testvalues[-1].copy()
+
+                # Add an invalid field
+                testvalues[field] = 42
+
+                errmsg = "__new__() got an unexpected keyword argument '{}'".format(field)
+                with self.assertRaises(TypeError) as cm:
+                    testobj.pack(**testvalues)
+                self.assertEquals(str(cm.exception), errmsg)
 
     @unittest.skip('unpack test not implemented')
     def test_unpack(self):
