@@ -70,8 +70,8 @@ class TestNamedstruct(unittest.TestCase):
                     ns.NamedStruct('test', self.teststruct, mode)
                 self.assertEqual(str(cm.exception), 'invalid mode: {}'.format(mode))
 
-    def test_init_invalid_fields(self):
-        """Test invalid NamedStruct fields."""
+    def test_init_invalid_struct_format(self):
+        """Test invalid NamedStruct format fields."""
 
         """
         Invalid fields are format specifiers that are not accepted by the
@@ -98,6 +98,12 @@ class TestNamedstruct(unittest.TestCase):
                 ns.NamedStruct('test', invalid_struct)
             self.assertEqual(str(cm.exception), 'repeat count given without format specifier')
 
+    @unittest.skip('invalid tuple field not implemented')
+    def test_init_invalid_field(self):
+        """Test invalid field tuple detection."""
+
+        self.fail('not implemented')
+
     def test_init_empty_struct(self):
         """Test an empty NamedStruct."""
 
@@ -121,20 +127,75 @@ class TestNamedstruct(unittest.TestCase):
                 self.assertEqual(val._tuple._fields, testtuple._fields)  # pylint: disable=W0212
                 self.assertEqual(val.size(), 22)
 
-    def test_pack(self):
-        """Test packing data for all NamedStruct formats."""
+    def test_pack_little_endian(self):
+        """Test little endian packing data for all NamedStruct formats."""
 
-        testobj = ns.NamedStruct('little_endian', self.teststruct, modes.Mode.Little)
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Little)
         for idx in range(len(self.testvalues)):
-            with self.subTest('little endian {}'.format(idx)):
-                # TODO: pack_into()
+            with self.subTest(idx):
                 self.assertEqual(self.testbytes['little'][idx], testobj.pack(**self.testvalues[idx]))
 
-        testobj = ns.NamedStruct('big_endian', self.teststruct, modes.Mode.Big)
+    def test_pack_into_little_endian(self):
+        """Test little endian packing data for all NamedStruct formats."""
+
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Little)
+        import random
+        import array
+        # Make the test array double the required 22 bytes
+        orig_buf = bytes(random.getrandbits(8) for i in range(22 * 2))
         for idx in range(len(self.testvalues)):
-            with self.subTest('big endian {}'.format(idx)):
-                # TODO: pack_into()
+            with self.subTest(idx):
+                test_buf = array.array('B', orig_buf)
+
+                start = idx
+                end = idx + len(self.testbytes['little'][idx]) 
+                expected_buf = orig_buf[:start] + self.testbytes['little'][idx] + orig_buf[end:]
+
+                # sanity check
+                result_buf = test_buf.tobytes()
+                self.assertEqual(orig_buf, result_buf)
+                self.assertNotEqual(expected_buf, result_buf)
+
+                testobj.pack_into(test_buf, idx, **self.testvalues[idx])
+
+                # actual test
+                result_buf = test_buf.tobytes()
+                self.assertEqual(expected_buf, result_buf)
+
+    def test_pack_big_endian(self):
+        """Test big endian packing data for all NamedStruct formats."""
+
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Big)
+        for idx in range(len(self.testvalues)):
+            with self.subTest(idx):
                 self.assertEqual(self.testbytes['big'][idx], testobj.pack(**self.testvalues[idx]))
+
+    def test_pack_into_big_endian(self):
+        """Test big endian packing data for all NamedStruct formats."""
+
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Big)
+        import random
+        import array
+        # Make the test array double the required 22 bytes
+        orig_buf = bytes(random.getrandbits(8) for i in range(22 * 2))
+        for idx in range(len(self.testvalues)):
+            with self.subTest(idx):
+                test_buf = array.array('B', orig_buf)
+
+                start = idx
+                end = idx + len(self.testbytes['big'][idx])
+                expected_buf = orig_buf[:start] + self.testbytes['big'][idx] + orig_buf[end:]
+
+                # sanity check
+                result_buf = test_buf.tobytes()
+                self.assertEqual(orig_buf, result_buf)
+                self.assertNotEqual(expected_buf, result_buf)
+
+                testobj.pack_into(test_buf, idx, **self.testvalues[idx])
+
+                # actual test
+                result_buf = test_buf.tobytes()
+                self.assertEqual(expected_buf, result_buf)
 
     def test_pack_invalid(self):
         """Test the error that occurs when attempting to pack invalid data."""
@@ -180,12 +241,40 @@ class TestNamedstruct(unittest.TestCase):
                     testobj.pack(**testvalues)
                 self.assertEquals(str(cm.exception), errmsg)
 
-    @unittest.skip('unpack test not implemented')
-    def test_unpack(self):
-        """Test unpacking data for all NamedStruct formats."""
+    def test_unpack_little_endian(self):
+        """Test unpacking little endian data for all NamedStruct formats."""
 
-        # TODO: pick at least 3 values for every field and verify that they can
-        # be unpacked in a variety of modes
-        # unpack()
-        # unpack_from()
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Little)
+        for idx in range(len(self.testvalues)):
+            with self.subTest(idx):
+                # returns a NamedStruct tuple
+                result = testobj.unpack(self.testbytes['little'][idx])
+
+                # convert result NamedStruct to dictionary to compare dictionary 
+                # keys and values
+                self.assertDictEqual(self.testvalues[idx], dict(result._asdict()))
+
+    @unittest.skip('little endian unpack_from test not implemented')
+    def test_unpack_from_little_endian(self):
+        """Test unpacking little endian data for all NamedStruct formats."""
+
+        self.fail('not implemented')
+
+    def test_unpack_big_endian(self):
+        """Test unpacking big endian data for all NamedStruct formats."""
+
+        testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Big)
+        for idx in range(len(self.testvalues)):
+            with self.subTest(idx):
+                # returns a NamedStruct tuple
+                result = testobj.unpack(self.testbytes['big'][idx])
+
+                # convert result NamedStruct to dictionary to compare dictionary 
+                # keys and values
+                self.assertDictEqual(self.testvalues[idx], dict(result._asdict()))
+
+    @unittest.skip('big endian unpack_from test not implemented')
+    def test_unpack_from_big_endian(self):
+        """Test unpacking big endian data for all NamedStruct formats."""
+
         self.fail('not implemented')
