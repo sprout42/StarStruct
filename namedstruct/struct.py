@@ -40,8 +40,8 @@ class NamedStruct(object):
         # doesn't have to be done now because the format will be checked when
         # any struct functions are called, but it's better to inform the user of
         # any errors earlier.
-        # The easiest way to perform this check is to create a "Struct" class 
-        # instance, this will also increase the efficiency of all struct related 
+        # The easiest way to perform this check is to create a "Struct" class
+        # instance, this will also increase the efficiency of all struct related
         # functions called.
         self._struct = struct.Struct(fmt)
 
