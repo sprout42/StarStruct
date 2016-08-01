@@ -2,16 +2,16 @@
 
 """Tests for the namedstruct class"""
 
+import struct
 import collections
 import unittest
 
-from namedstruct import struct as ns
+from namedstruct import message as ns
 from namedstruct import modes
-import struct
 
 
+# pylint: disable=line-too-long,invalid-name
 class TestNamedstruct(unittest.TestCase):
-
     """NamedStruct tests"""
 
     # structure used for all tests, exercises a range of struct formats.  It
@@ -31,10 +31,10 @@ class TestNamedstruct(unittest.TestCase):
     ]
 
     testvalues = [
-        { 'a': -128, 'b': 0,     'c': b'0123456789',        'e': 0 },
-        { 'a': 127,  'b': 65535, 'c': b'abcdefghij',        'e': 0xFFFFFFFF },
-        { 'a': -1,   'b': 32767, 'c': b'\n\tzyx\0\0\0\0\0', 'e': 0x7FFFFFFF },
-        { 'a': 100,  'b': 100,   'c': b'a0b1c2d3e4',        'e': 10000 },
+        {'a': -128, 'b': 0, 'c': b'0123456789', 'e': 0},
+        {'a': 127, 'b': 65535, 'c': b'abcdefghij', 'e': 0xFFFFFFFF},
+        {'a': -1, 'b': 32767, 'c': b'\n\tzyx\0\0\0\0\0', 'e': 0x7FFFFFFF},
+        {'a': 100, 'b': 100, 'c': b'a0b1c2d3e4', 'e': 10000},
     ]
 
     testbytes = {
@@ -56,6 +56,8 @@ class TestNamedstruct(unittest.TestCase):
         """Test invalid NamedStruct names."""
 
         for name in [None, '', 1, dict(), list()]:
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(name):
                 with self.assertRaises(TypeError) as cm:
                     ns.NamedStruct(name, self.teststruct)
@@ -65,6 +67,8 @@ class TestNamedstruct(unittest.TestCase):
         """Test invalid NamedStruct modes."""
 
         for mode in ['=', 'stuff', 0, -1, 1]:
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(mode):
                 with self.assertRaises(TypeError) as cm:
                     ns.NamedStruct('test', self.teststruct, mode)
@@ -81,7 +85,9 @@ class TestNamedstruct(unittest.TestCase):
         Append the invalid field to the end of the standard test structure and
         ensure it fails.
         """
-        for field in [ 'a', '#', 'Z' ]:
+        for field in ['a', '#', 'Z']:
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(field):
                 invalid_struct = self.teststruct + [('invalid', field)]
                 with self.assertRaises(struct.error) as cm:
@@ -92,6 +98,8 @@ class TestNamedstruct(unittest.TestCase):
         Test invalid characters and an invalid trailing number.
         """
         field = '5'
+        # disable some pylint false errors
+        # pylint: disable=no-member
         with self.subTest('5'):
             invalid_struct = self.teststruct + [('invalid', field)]
             with self.assertRaises(struct.error) as cm:
@@ -118,6 +126,8 @@ class TestNamedstruct(unittest.TestCase):
         testfields = ['a', 'b', 'c', 'e']
         testtuple = collections.namedtuple('test', testfields)
         for mode in modes.Mode:
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(mode):
                 val = ns.NamedStruct('test', self.teststruct, mode)
                 self.assertEqual(val._tuple._fields, tuple(testfields))  # pylint: disable=W0212
@@ -132,6 +142,8 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Little)
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 self.assertEqual(self.testbytes['little'][idx], testobj.pack(**self.testvalues[idx]))
 
@@ -144,11 +156,13 @@ class TestNamedstruct(unittest.TestCase):
         # Make the test array double the required 22 bytes
         orig_buf = bytes(random.getrandbits(8) for i in range(22 * 2))
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 test_buf = array.array('B', orig_buf)
 
                 start = idx
-                end = idx + len(self.testbytes['little'][idx]) 
+                end = idx + len(self.testbytes['little'][idx])
                 expected_buf = orig_buf[:start] + self.testbytes['little'][idx] + orig_buf[end:]
 
                 # sanity check
@@ -167,6 +181,8 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Big)
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 self.assertEqual(self.testbytes['big'][idx], testobj.pack(**self.testvalues[idx]))
 
@@ -179,6 +195,8 @@ class TestNamedstruct(unittest.TestCase):
         # Make the test array double the required 22 bytes
         orig_buf = bytes(random.getrandbits(8) for i in range(22 * 2))
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 test_buf = array.array('B', orig_buf)
 
@@ -202,17 +220,19 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct)
         test_field_invalid_value = [
-            ('a',               -129, 'byte format requires -128 <= number <= 127'),
-            ('a',                128, 'byte format requires -128 <= number <= 127'),
-            ('b',                 -1, 'ushort format requires 0 <= number <= USHRT_MAX'),
-            ('b',         0xFFFF + 1, 'ushort format requires 0 <= number <= USHRT_MAX'),
+            ('a', -129, 'byte format requires -128 <= number <= 127'),
+            ('a', 128, 'byte format requires -128 <= number <= 127'),
+            ('b', -1, 'ushort format requires 0 <= number <= USHRT_MAX'),
+            ('b', 0xFFFF + 1, 'ushort format requires 0 <= number <= USHRT_MAX'),
             ('c', 'not a bytestring', "argument for 's' must be a bytes object"),
-            ('c',                 42, "argument for 's' must be a bytes object"),
-            ('e',                 -1, 'argument out of range'),
-            ('e',     0xFFFFFFFF + 1, 'argument out of range'),
+            ('c', 42, "argument for 's' must be a bytes object"),
+            ('e', -1, 'argument out of range'),
+            ('e', 0xFFFFFFFF + 1, 'argument out of range'),
         ]
         for (field, value, errmsg) in test_field_invalid_value:
             sub_test_msg = '{}={}'.format(field, value)
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(sub_test_msg):
                 # start with a valid set of values
                 testvalues = self.testvalues[-1].copy()
@@ -229,6 +249,8 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct)
         for field in ['aa', 'd', 'invalid']:
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(field):
                 # start with a valid set of values
                 testvalues = self.testvalues[-1].copy()
@@ -246,11 +268,13 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Little)
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 # returns a NamedStruct tuple
                 result = testobj.unpack(self.testbytes['little'][idx])
 
-                # convert result NamedStruct to dictionary to compare dictionary 
+                # convert result NamedStruct to dictionary to compare dictionary
                 # keys and values
                 self.assertDictEqual(self.testvalues[idx], dict(result._asdict()))
 
@@ -265,11 +289,13 @@ class TestNamedstruct(unittest.TestCase):
 
         testobj = ns.NamedStruct('test', self.teststruct, modes.Mode.Big)
         for idx in range(len(self.testvalues)):
+            # disable some pylint false errors
+            # pylint: disable=no-member
             with self.subTest(idx):
                 # returns a NamedStruct tuple
                 result = testobj.unpack(self.testbytes['big'][idx])
 
-                # convert result NamedStruct to dictionary to compare dictionary 
+                # convert result NamedStruct to dictionary to compare dictionary
                 # keys and values
                 self.assertDictEqual(self.testvalues[idx], dict(result._asdict()))
 
