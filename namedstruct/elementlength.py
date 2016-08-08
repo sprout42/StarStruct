@@ -38,11 +38,12 @@ class ElementLength(Element):
         enum element type.
 
         The basics have already been validated by the Element factory class,
-        validate that the struct format is a valid numeric value.
+        validate that the struct format is a valid unsigned numeric value.
         """
         return len(field) == 3 \
-            and re.match(r'\d*[cbBhHiIlLqQ]', field[1]) \
-            and isinstance(field[2], str)
+            and isinstance(field[1], str) \
+            and re.match(r'\d*[BHILQ]', field[1]) \
+            and isinstance(field[2], str) and len(field[2])
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""

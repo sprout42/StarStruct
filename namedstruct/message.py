@@ -109,7 +109,8 @@ class Message(object):
                 if not isinstance(self._elements[elem.ref], namedstruct.elementenum.ElementEnum):
                     err = 'discriminated field {} reference {} invalid type'
                     raise TypeError(err.format(elem.name, elem.ref))
-                elif not self._elements[elem.ref].ref == elem.name:
+                elif not all(isinstance(key, self._elements[elem.ref].ref)
+                             for key in elem.format.keys()):
                     err = 'discriminated field {} reference {} mismatch'
                     raise TypeError(err.format(elem.name, elem.ref))
                 else:
@@ -122,8 +123,11 @@ class Message(object):
                             msg = err.format(elem.name, key, elem.ref)
                             raise TypeError(msg)
 
-    def pack(self, **kwargs):
+    def pack(self, obj=None, **kwargs):
         """Pack the provided values using the initialized format."""
+        # Handle a positional dictionary argument as well as the more generic kwargs
+        if obj and isinstance(obj, dict):
+            kwargs = obj
         return b''.join([elem.pack(kwargs) for elem in self._elements.values()])
 
     def unpack(self, buf):
@@ -136,3 +140,25 @@ class Message(object):
             if elem.name:
                 msg = msg._replace(**dict([(elem.name, val)]))
         return (msg, buf)
+
+    def make(self, obj=None, **kwargs):
+        """
+        A utility function that returns a namedtuple based on the current
+        object's format for the supplied object.
+        """
+        if obj and isinstance(obj, dict):
+            kwargs = obj
+        msg = self._tuple._make([None] * len(self._tuple._fields))
+        for elem in self._elements.values():
+            if isinstance(elem, ElementDiscriminated):
+                val = elem.format[kwargs[elem.ref]].make(kwargs[elem.name])
+                msg = msg._replace(**dict([(elem.name, val)]))
+            elif isinstance(elem, ElementVariable):
+                val = [elem.format.make(e) for e in kwargs[elem.name]]
+                msg = msg._replace(**dict([(elem.name, val)]))
+            elif isinstance(elem, (ElementLength, ElementEnum, ElementBase)):
+                msg = msg._replace(**dict([(elem.name, kwargs[elem.name])]))
+            elif isinstance(elem, ElementPad):
+                # There is no element to transform
+                pass
+        return msg

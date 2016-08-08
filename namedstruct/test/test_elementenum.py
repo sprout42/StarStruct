@@ -15,6 +15,13 @@ class SimpleEnum(enum.Enum):
     two = 2
 
 
+# pylint: disable=blacklisted-name
+class StrEnum(enum.Enum):
+    """string based enum class for testing message pack/unpack"""
+    foo = 'foo'
+    bar = 'bar'
+
+
 # pylint: disable=line-too-long,invalid-name
 class TestElementEnum(unittest.TestCase):
     """ElementEnum module tests"""
@@ -27,6 +34,7 @@ class TestElementEnum(unittest.TestCase):
             ('b', 'H', SimpleEnum),  # unsigned short: 0, 65535
             ('d', 'L', SimpleEnum),  # unsigned long: 0, 2^32-1
             ('e', '?', SimpleEnum),  # bool: 0, 1
+            ('d', '10s', StrEnum),   # 10 byte string
         ]
 
         for field in test_fields:
@@ -38,12 +46,12 @@ class TestElementEnum(unittest.TestCase):
         """Test field formats that are not valid ElementEnum elements."""
 
         test_fields = [
-            ('a', '4x'),    # 4 pad bytes
-            ('b', 'z'),     # invalid
-            ('c', '1'),     # invalid
-            ('d', '10s'),   # 10 byte string
-            ('e', '9S'),    # invalid (must be lowercase)
-            ('f', '/'),     # invalid
+            ('a', '4x', SimpleEnum),  # 4 pad bytes
+            ('b', 'z', SimpleEnum),   # invalid
+            ('c', '1', SimpleEnum),   # invalid
+            ('e', '9S', SimpleEnum),  # invalid (must be lowercase)
+            ('d', '/', SimpleEnum),   # invalid
+            ('f', 'H'),               # unsigned short (no class)
         ]
 
         for field in test_fields:

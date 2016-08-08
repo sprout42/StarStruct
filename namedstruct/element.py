@@ -34,9 +34,9 @@ class Element(object):
             provided, but the 3rd optional element is provided which is a
             subclass of enum.Enum.
 
-         3. Length: a standard python struct format character that represents a
-            numeric value, and the field name are provided, but the 3rd
-            optional element is provided and is a string.  In this case the
+         3. Length: a standard python struct format character that represents
+            an unsigned numeric value, and the field name are provided, but the
+            3rd optional element is provided and is a string.  In this case the
             string is assumed to be another field which is the name of a
             Variable element.
 
@@ -61,7 +61,7 @@ class Element(object):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # The field parameter is a single field tuple:
-        #   ('name', 'format')
+        #   ('name', 'format', <optional>)
         if not isinstance(field, tuple):
             raise TypeError('invalid element: {}'.format(field))
 

@@ -1,5 +1,6 @@
 """NamedStruct element class."""
 
+import namedstruct
 from namedstruct.element import Element
 
 
@@ -34,16 +35,18 @@ class ElementDiscriminated(Element):
         """
         return len(field) == 3 \
             and isinstance(field[1], dict) \
-            and isinstance(field[2], str)
+            and isinstance(field[2], str) \
+            and all(isinstance(val, namedstruct.message.Message)
+                    for val in field[1].values())
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
         # When packing use the value of the referenced element to determine
         # which field format to use to pack this element.
-        return self.format[msg[self.ref]].pack(msg[self.name])
+        return self.format[msg[self.ref]].pack(dict(msg[self.name]))
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         # When unpacking a discriminated element, reference the already unpacked
         # enum field to determine how many elements need unpacked.
-        return self.format[msg[self.ref]].unpack(buf)
+        return self.format[getattr(msg, self.ref)].unpack(buf)

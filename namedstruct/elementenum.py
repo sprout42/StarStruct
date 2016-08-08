@@ -42,6 +42,7 @@ class ElementEnum(Element):
         validate that the struct format is a valid numeric value.
         """
         return len(field) == 3 \
+            and isinstance(field[1], str) \
             and re.match(r'\d*[cbB?hHiIlLqQnNfdspP]', field[1]) \
             and issubclass(field[2], enum.Enum)
 

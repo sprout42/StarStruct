@@ -46,6 +46,7 @@ class ElementPad(Element):
         validate the specific struct format now.
         """
         return len(field) == 2 \
+            and isinstance(field[1], str) \
             and re.match(r'\d*x', field[1])
 
     def pack(self, msg):

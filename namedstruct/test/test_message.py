@@ -5,7 +5,8 @@
 import unittest
 
 import enum
-import namedstruct as ns
+from namedstruct.message import Message
+from namedstruct.modes import Mode
 
 
 class SimpleEnum(enum.Enum):
@@ -19,42 +20,152 @@ class SimpleEnum(enum.Enum):
 class TestNamedstruct(unittest.TestCase):
     """NamedStruct module tests"""
 
+    # Variable structure
+    testvarstruct = {
+        'little': Message('VarTest', [('x', 'B'), ('y', 'B')], Mode.Little),
+        'big': Message('VarTest', [('x', 'B'), ('y', 'B')], Mode.Big),
+    }
+
+    # Discriminated struct 1
+    teststruct1 = {
+        'little': Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'l')], Mode.Little),
+        'big': Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'l')], Mode.Big),
+    }
+
+    # Discriminated struct 2
+    teststruct2 = {
+        'little': Message('Struct2', [('z', '20s')], Mode.Little),
+        'big': Message('Struct2', [('z', '20s')], Mode.Big),
+    }
+
+    # Discriminated struct 2
+    teststruct3 = {
+        'little': Message('Struct3', [], Mode.Little),
+        'big': Message('Struct3', [], Mode.Big),
+    }
+
     # structure used for all tests, exercises a range of struct formats.  It
     # isn't necessary to test them all because we don't need to test all of the
     # struct module, just enough to ensure that the values and patterns are
     # matched up properly by the NamedStruct class.
     #
     # Total size of this format is 18 bytes.
-    teststruct = [
-        ('a', 'b'),              # signed byte: -128, 127
-        ('pad1', '3x'),          # 3 pad bytes
-        ('b', 'H'),              # unsigned short: 0, 65535
-        ('pad2', 'x'),           # 1 pad byte
-        ('c', '10s'),            # 10 byte string
-        ('d', 'x'),              # 1 pad byte
-        ('e', 'L'),              # unsigned long: 0, 2^32-1
-        ('f', 'B', SimpleEnum),  # unsigned byte, enum validated
-    ]
+    teststruct = {
+        'little': [
+            ('a', 'b'),                                      # signed byte: -128, 127
+            ('pad1', '3x'),                                  # 3 pad bytes
+            ('b', 'H'),                                      # unsigned short: 0, 65535
+            ('pad2', 'x'),                                   # 1 pad byte
+            ('c', '10s'),                                    # 10 byte string
+            ('d', 'x'),                                      # 1 pad byte
+            ('e', 'L'),                                      # unsigned long: 0, 2^32-1
+            ('type', 'B', SimpleEnum),                       # unsigned byte, enum validated
+            ('length', 'H', 'vardata'),                      # unsigned short length field
+            ('vardata', testvarstruct['little'], 'length'),  # variable length data
+            ('data', {                                       # discriminated data
+                SimpleEnum.one: teststruct1['little'],
+                SimpleEnum.two: teststruct2['little'],
+                SimpleEnum.three: teststruct3['little'],
+            }, 'type'),
+        ],
+        'big': [
+            ('a', 'b'),                                      # signed byte: -128, 127
+            ('pad1', '3x'),                                  # 3 pad bytes
+            ('b', 'H'),                                      # unsigned short: 0, 65535
+            ('pad2', 'x'),                                   # 1 pad byte
+            ('c', '10s'),                                    # 10 byte string
+            ('d', 'x'),                                      # 1 pad byte
+            ('e', 'L'),                                      # unsigned long: 0, 2^32-1
+            ('type', 'B', SimpleEnum),                       # unsigned byte, enum validated
+            ('length', 'H', 'vardata'),                      # unsigned short length field
+            ('vardata', testvarstruct['big'], 'length'),     # variable length data
+            ('data', {                                       # discriminated data
+                SimpleEnum.one: teststruct1['big'],
+                SimpleEnum.two: teststruct2['big'],
+                SimpleEnum.three: teststruct3['big'],
+            }, 'type'),
+        ],
+    }
 
     testvalues = [
-        {'a': -128, 'b': 0, 'c': b'0123456789', 'e': 0, 'f': SimpleEnum.one},
-        {'a': 127, 'b': 65535, 'c': b'abcdefghij', 'e': 0xFFFFFFFF, 'f': SimpleEnum.two},
-        {'a': -1, 'b': 32767, 'c': b'\n\tzyx\0\0\0\0\0', 'e': 0x7FFFFFFF, 'f': SimpleEnum.three},
-        {'a': 100, 'b': 100, 'c': b'a0b1c2d3e4', 'e': 10000, 'f': SimpleEnum.one},
+        {
+            'a': -128,
+            'b': 0,
+            'c': b'0123456789',
+            'e': 0,
+            'type': SimpleEnum.one,
+            'length': 0,
+            'vardata': [],
+            'data': {
+                'y': 50,
+                'z': 0x5577AACC,
+            },
+        },
+        {
+            'a': 127,
+            'b': 65535,
+            'c': b'abcdefghij',
+            'e': 0xFFFFFFFF,
+            'type': SimpleEnum.two,
+            'length': 2,
+            'vardata': [
+                {'x': 1, 'y': 2},
+                {'x': 3, 'y': 4},
+            ],
+            'data': {
+                'z': b'0123456789abcdefghij',
+            },
+        },
+        {
+            'a': -1,
+            'b': 32767,
+            'c': b'\n\tzyx\0\0\0\0\0',
+            'e': 0x7FFFFFFF,
+            'type': SimpleEnum.three,
+            'length': 1,
+            'vardata': [
+                {'x': 255, 'y': 127},
+            ],
+            'data': {},
+        },
+        {
+            'a': 100,
+            'b': 100,
+            'c': b'a0b1c2d3e4',
+            'e': 10000,
+            'type': SimpleEnum.one,
+            'length': 10,
+            'vardata': [
+                {'x': 255, 'y': 127},
+                {'x': 254, 'y': 128},
+                {'x': 253, 'y': 129},
+                {'x': 252, 'y': 130},
+                {'x': 251, 'y': 131},
+                {'x': 250, 'y': 132},
+                {'x': 249, 'y': 133},
+                {'x': 248, 'y': 134},
+                {'x': 247, 'y': 135},
+                {'x': 246, 'y': 136},
+            ],
+            'data': {
+                'y': 100,
+                'z': 2000,
+            },
+        },
     ]
 
     testbytes = {
         'little': [
-            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00\x01',
-            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF\x02',
-            b'\xFF\x00\x00\x00\xFF\x7F\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\x7F\x03',
-            b'\x64\x00\x00\x00\x64\x00\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x10\x27\x00\x00\x01',
+            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00\x01\x00\x00\x32\x00\x00\x00\xCC\xAA\x77\x55',
+            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF\x02\x02\x00\x01\x02\x03\x04\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6a',
+            b'\xFF\x00\x00\x00\xFF\x7F\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\xFF\xFF\xFF\x7F\x03\x01\x00\xFF\x7F',
+            b'\x64\x00\x00\x00\x64\x00\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x10\x27\x00\x00\x01\x0A\x00\xFF\x7F\xFE\x80\xFD\x81\xFC\x82\xFB\x83\xFA\x84\xF9\x85\xF8\x86\xF7\x87\xF6\x88\x64\x00\x00\x00\xD0\x07\x00\x00',
         ],
         'big': [
-            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00\x01',
-            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF\x02',
-            b'\xFF\x00\x00\x00\x7F\xFF\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\x7F\xFF\xFF\xFF\x03',
-            b'\x64\x00\x00\x00\x00\x64\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x00\x00\x27\x10\x01',
+            b'\x80\x00\x00\x00\x00\x00\x00\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x00\x00\x00\x00\x00\x01\x00\x00\x32\x00\x00\x00\x55\x77\xAA\xCC',
+            b'\x7F\x00\x00\x00\xFF\xFF\x00\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6A\x00\xFF\xFF\xFF\xFF\x02\x00\x02\x01\x02\x03\x04\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6a',
+            b'\xFF\x00\x00\x00\x7F\xFF\x00\x0A\x09\x7A\x79\x78\x00\x00\x00\x00\x00\x00\x7F\xFF\xFF\xFF\x03\x00\x01\xFF\x7F',
+            b'\x64\x00\x00\x00\x00\x64\x00\x61\x30\x62\x31\x63\x32\x64\x33\x65\x34\x00\x00\x00\x27\x10\x01\x00\x0A\xFF\x7F\xFE\x80\xFD\x81\xFC\x82\xFB\x83\xFA\x84\xF9\x85\xF8\x86\xF7\x87\xF6\x88\x64\x00\x00\x00\x00\x00\x07\xD0',
         ],
     }
 
@@ -64,7 +175,7 @@ class TestNamedstruct(unittest.TestCase):
         for name in [None, '', 1, dict(), list()]:
             with self.subTest(name):  # pylint: disable=no-member
                 with self.assertRaises(TypeError) as cm:
-                    ns.Message(name, self.teststruct)
+                    Message(name, self.teststruct['little'])
                 self.assertEqual(str(cm.exception), 'invalid name: {}'.format(name))
 
     def test_init_invalid_mode(self):
@@ -73,18 +184,18 @@ class TestNamedstruct(unittest.TestCase):
         for mode in ['=', 'stuff', 0, -1, 1]:
             with self.subTest(mode):  # pylint: disable=no-member
                 with self.assertRaises(TypeError) as cm:
-                    ns.Message('test', self.teststruct, mode)
+                    Message('test', self.teststruct['little'], mode)
                 self.assertEqual(str(cm.exception), 'invalid mode: {}'.format(mode))
 
     def test_init_empty_struct(self):
         """Test an empty Message."""
 
-        val = ns.Message('test', [])
+        val = Message('test', [])
         self.assertEqual(val._tuple._fields, ())  # pylint: disable=protected-access
 
     def test_pack_little_endian(self):
         """Test pack the test formats."""
-        test_msg = ns.Message('test', self.teststruct, ns.modes.Mode.Little)
+        test_msg = Message('test', self.teststruct['little'], Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 packed_msg = test_msg.pack(**self.testvalues[idx])
@@ -92,17 +203,17 @@ class TestNamedstruct(unittest.TestCase):
 
     def test_unpack_little_endian(self):
         """Test unpack the test formats."""
-        test_msg = ns.Message('test', self.teststruct, ns.modes.Mode.Little)
+        test_msg = Message('test', self.teststruct['little'], Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 (unpacked_msg, unused) = test_msg.unpack(self.testbytes['little'][idx])
                 self.assertEqual(unused, b'')
-                expected_tuple = test_msg._tuple(**self.testvalues[idx])  # pylint: disable=protected-access
+                expected_tuple = test_msg.make(**self.testvalues[idx])  # pylint: disable=protected-access
                 self.assertEqual(unpacked_msg, expected_tuple)
 
     def test_pack_big_endian(self):
         """Test pack the test formats."""
-        test_msg = ns.Message('test', self.teststruct, ns.modes.Mode.Big)
+        test_msg = Message('test', self.teststruct['big'], Mode.Big)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 packed_msg = test_msg.pack(**self.testvalues[idx])
