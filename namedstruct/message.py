@@ -158,7 +158,7 @@ class Message(object):
                 msg = msg._replace(**dict([(elem.name, val)]))
             elif isinstance(elem, (ElementLength, ElementEnum, ElementBase)):
                 msg = msg._replace(**dict([(elem.name, kwargs[elem.name])]))
-            elif isinstance(elem, ElementPad):
+            elif isinstance(elem, ElementPad):  # pragma: no cover (else unreachable)
                 # There is no element to transform
                 pass
         return msg
