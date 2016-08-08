@@ -2,11 +2,11 @@
 
 """Setup script for NamedStruct."""
 
+import os
 import setuptools
 
 from namedstruct import __project__, __version__
 
-import os
 if os.path.exists('README.rst'):
     README = open('README.rst').read()
 else:
@@ -18,8 +18,8 @@ setuptools.setup(
     name=__project__,
     version=__version__,
 
-    description="NamedStruct is a Python 2 package.",
-    url='https://github.com/sprout42/python-namedstruct',
+    description="NamedStruct allows for easy binary stream pack/unpack",
+    url='https://github.com/sprout42/NamedStruct',
     author='Aaron Cornelius',
     author_email='a.aaron.cornelius@gmail.com',
 
@@ -33,7 +33,7 @@ setuptools.setup(
         'Development Status :: 1 - Planning',
         'Natural Language :: English',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.5',
     ],
 
     install_requires=open('requirements.txt').readlines(),

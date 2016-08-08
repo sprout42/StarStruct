@@ -7,7 +7,7 @@ EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 # Python settings
 ifndef TRAVIS
 	PYTHON_MAJOR := 3
-	PYTHON_MINOR := 4
+	PYTHON_MINOR := 5
 endif
 
 # Test settings
@@ -169,6 +169,7 @@ fix: depends-dev
 PYTEST_OPTS := --doctest-modules --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
 
 .PHONY: test
+# python -m unittest discover
 test: depends-ci .clean-test
 	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
 	$(COVERAGE) report --fail-under=$(UNIT_TEST_COVERAGE) > /dev/null
