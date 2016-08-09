@@ -36,17 +36,26 @@ class ElementDiscriminated(Element):
         return len(field) == 3 \
             and isinstance(field[1], dict) \
             and isinstance(field[2], str) \
-            and all(isinstance(val, namedstruct.message.Message)
+            and all(isinstance(val, (namedstruct.message.Message, type(None)))
                     for val in field[1].values())
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
         # When packing use the value of the referenced element to determine
-        # which field format to use to pack this element.
-        return self.format[msg[self.ref]].pack(dict(msg[self.name]))
+        # which field format to use to pack this element.  Be sure to check if
+        # the referenced format is None or a Message object.
+        if self.format[msg[self.ref]]:
+            return self.format[msg[self.ref]].pack(dict(msg[self.name]))
+        else:
+            return b''
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         # When unpacking a discriminated element, reference the already unpacked
-        # enum field to determine how many elements need unpacked.
-        return self.format[getattr(msg, self.ref)].unpack(buf)
+        # enum field to determine how many elements need unpacked.  If the
+        # specific value is None rather than a Message object, return no new
+        # parsed data.
+        if self.format[getattr(msg, self.ref)]:
+            return self.format[getattr(msg, self.ref)].unpack(buf)
+        else:
+            return (None, buf)

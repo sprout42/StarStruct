@@ -45,16 +45,16 @@ class Element(object):
             NamedStruct.message, the optional 3rd element must be provided and
             should be the name of a valid Length element.  The validity of the
             referenced element must be checked after the creation of the entire
-            message with the Element.validate() function.
+            message with the Message.validate() function.
 
          5. Discriminated: a message element that can have multiple formats
             such as a C union.  The format field should be a dictionary where
             the keys represent values of a referenced enumeration field, and
-            the value for each entry is a valid NamedStruct.message.  The
-            optional 3rd element must be provided and should be the name of a
-            valid Enum element.  The validity of the referenced element must
+            the value for each entry is a valid NamedStruct.message, or None.
+            The optional 3rd element must be provided and should be the name of
+            a valid Enum element.  The validity of the referenced element must
             be checked after the creation of the entire message with the
-            Element.validate() function.
+            Message.validate() function.
         """
 
         if not isinstance(mode, namedstruct.modes.Mode):
