@@ -21,28 +21,16 @@ class TestNamedstruct(unittest.TestCase):
     """NamedStruct module tests"""
 
     # Variable structure
-    testvarstruct = {
-        'little': Message('VarTest', [('x', 'B'), ('y', 'B')], Mode.Little),
-        'big': Message('VarTest', [('x', 'B'), ('y', 'B')], Mode.Big),
-    }
+    testvarstruct = Message('VarTest', [('x', 'B'), ('y', 'B')])
 
     # Discriminated struct 1
-    teststruct1 = {
-        'little': Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'l')], Mode.Little),
-        'big': Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'l')], Mode.Big),
-    }
+    teststruct1 = Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'i')])
 
     # Discriminated struct 2
-    teststruct2 = {
-        'little': Message('Struct2', [('z', '20s')], Mode.Little),
-        'big': Message('Struct2', [('z', '20s')], Mode.Big),
-    }
+    teststruct2 = Message('Struct2', [('z', '20s')])
 
     # Discriminated struct 2
-    teststruct3 = {
-        'little': Message('Struct3', [], Mode.Little),
-        'big': Message('Struct3', [], Mode.Big),
-    }
+    teststruct3 = Message('Struct3', [])
 
     # structure used for all tests, exercises a range of struct formats.  It
     # isn't necessary to test them all because we don't need to test all of the
@@ -50,48 +38,29 @@ class TestNamedstruct(unittest.TestCase):
     # matched up properly by the NamedStruct class.
     #
     # Total size of this format is 18 bytes.
-    teststruct = {
-        'little': [
-            ('a', 'b'),                                      # signed byte: -128, 127
-            ('pad1', '3x'),                                  # 3 pad bytes
-            ('b', 'H'),                                      # unsigned short: 0, 65535
-            ('pad2', 'x'),                                   # 1 pad byte
-            ('c', '10s'),                                    # 10 byte string
-            ('d', 'x'),                                      # 1 pad byte
-            ('e', 'L'),                                      # unsigned long: 0, 2^32-1
-            ('type', 'B', SimpleEnum),                       # unsigned byte, enum validated
-            ('length', 'H', 'vardata'),                      # unsigned short length field
-            ('vardata', testvarstruct['little'], 'length'),  # variable length data
-            ('data', {                                       # discriminated data
-                SimpleEnum.one: teststruct1['little'],
-                SimpleEnum.two: teststruct2['little'],
-                SimpleEnum.three: teststruct3['little'],
-            }, 'type'),
-        ],
-        'big': [
-            ('a', 'b'),                                      # signed byte: -128, 127
-            ('pad1', '3x'),                                  # 3 pad bytes
-            ('b', 'H'),                                      # unsigned short: 0, 65535
-            ('pad2', 'x'),                                   # 1 pad byte
-            ('c', '10s'),                                    # 10 byte string
-            ('d', 'x'),                                      # 1 pad byte
-            ('e', 'L'),                                      # unsigned long: 0, 2^32-1
-            ('type', 'B', SimpleEnum),                       # unsigned byte, enum validated
-            ('length', 'H', 'vardata'),                      # unsigned short length field
-            ('vardata', testvarstruct['big'], 'length'),     # variable length data
-            ('data', {                                       # discriminated data
-                SimpleEnum.one: teststruct1['big'],
-                SimpleEnum.two: teststruct2['big'],
-                SimpleEnum.three: teststruct3['big'],
-            }, 'type'),
-        ],
-    }
+    teststruct = [
+        ('a', 'b'),                            # signed byte: -128, 127
+        ('pad1', '3x'),                        # 3 pad bytes
+        ('b', 'H'),                            # unsigned short: 0, 65535
+        ('pad2', 'x'),                         # 1 pad byte
+        ('c', '10s'),                          # 10 byte string
+        ('d', 'x'),                            # 1 pad byte
+        ('e', '2H'),                           # 4 unsigned bytes: 0, 2^32-1
+        ('type', 'B', SimpleEnum),             # unsigned byte, enum validated
+        ('length', 'H', 'vardata'),            # unsigned short length field
+        ('vardata', testvarstruct, 'length'),  # variable length data
+        ('data', {                             # discriminated data
+            SimpleEnum.one: teststruct1,
+            SimpleEnum.two: teststruct2,
+            SimpleEnum.three: teststruct3,
+        }, 'type'),
+    ]
 
     testvalues = [
         {
             'a': -128,
             'b': 0,
-            'c': b'0123456789',
+            'c': '0123456789',
             'e': 0,
             'type': SimpleEnum.one,
             'length': 0,
@@ -104,7 +73,7 @@ class TestNamedstruct(unittest.TestCase):
         {
             'a': 127,
             'b': 65535,
-            'c': b'abcdefghij',
+            'c': 'abcdefghij',
             'e': 0xFFFFFFFF,
             'type': SimpleEnum.two,
             'length': 2,
@@ -113,13 +82,13 @@ class TestNamedstruct(unittest.TestCase):
                 {'x': 3, 'y': 4},
             ],
             'data': {
-                'z': b'0123456789abcdefghij',
+                'z': '0123456789abcdefghij',
             },
         },
         {
             'a': -1,
             'b': 32767,
-            'c': b'\n\tzyx\0\0\0\0\0',
+            'c': '\n\tzyx',
             'e': 0x7FFFFFFF,
             'type': SimpleEnum.three,
             'length': 1,
@@ -131,7 +100,7 @@ class TestNamedstruct(unittest.TestCase):
         {
             'a': 100,
             'b': 100,
-            'c': b'a0b1c2d3e4',
+            'c': 'a0b1c2d3e4',
             'e': 10000,
             'type': SimpleEnum.one,
             'length': 10,
@@ -175,7 +144,7 @@ class TestNamedstruct(unittest.TestCase):
         for name in [None, '', 1, dict(), list()]:
             with self.subTest(name):  # pylint: disable=no-member
                 with self.assertRaises(TypeError) as cm:
-                    Message(name, self.teststruct['little'])
+                    Message(name, self.teststruct)
                 self.assertEqual(str(cm.exception), 'invalid name: {}'.format(name))
 
     def test_init_invalid_mode(self):
@@ -184,7 +153,7 @@ class TestNamedstruct(unittest.TestCase):
         for mode in ['=', 'stuff', 0, -1, 1]:
             with self.subTest(mode):  # pylint: disable=no-member
                 with self.assertRaises(TypeError) as cm:
-                    Message('test', self.teststruct['little'], mode)
+                    Message('test', self.teststruct, mode)
                 self.assertEqual(str(cm.exception), 'invalid mode: {}'.format(mode))
 
     def test_init_empty_struct(self):
@@ -195,7 +164,7 @@ class TestNamedstruct(unittest.TestCase):
 
     def test_pack_little_endian(self):
         """Test pack the test formats."""
-        test_msg = Message('test', self.teststruct['little'], Mode.Little)
+        test_msg = Message('test', self.teststruct, Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 packed_msg = test_msg.pack(**self.testvalues[idx])
@@ -203,7 +172,7 @@ class TestNamedstruct(unittest.TestCase):
 
     def test_unpack_little_endian(self):
         """Test unpack the test formats."""
-        test_msg = Message('test', self.teststruct['little'], Mode.Little)
+        test_msg = Message('test', self.teststruct, Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 (unpacked_msg, unused) = test_msg.unpack(self.testbytes['little'][idx])
@@ -213,7 +182,7 @@ class TestNamedstruct(unittest.TestCase):
 
     def test_pack_big_endian(self):
         """Test pack the test formats."""
-        test_msg = Message('test', self.teststruct['big'], Mode.Big)
+        test_msg = Message('test', self.teststruct, Mode.Big)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 packed_msg = test_msg.pack(**self.testvalues[idx])

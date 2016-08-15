@@ -43,8 +43,15 @@ class ElementEnum(Element):
         """
         return len(field) == 3 \
             and isinstance(field[1], str) \
-            and re.match(r'\d*[cbB?hHiIlLqQnNfdspP]', field[1]) \
+            and re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) \
             and issubclass(field[2], enum.Enum)
+
+    def changemode(self, mode):
+        """change the mode of the struct format"""
+        self._mode = mode
+        self.format = mode.value + self.format[1:]
+        # recreate the struct with the new format
+        self._struct = struct.Struct(self.format)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""

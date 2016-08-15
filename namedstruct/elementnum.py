@@ -2,14 +2,15 @@
 
 import struct
 import re
+import numbers
 
 from namedstruct.element import Element
 from namedstruct.modes import Mode
 
 
-class ElementBase(Element):
+class ElementNum(Element):
     """
-    The basic NamedStruct element class.
+    A NamedStruct element class for number fields.
     """
 
     def __init__(self, field, mode=Mode.Native):
@@ -34,6 +35,12 @@ class ElementBase(Element):
         self.format = mode.value + field[1]
         self._struct = struct.Struct(self.format)
 
+        # for numeric elements we should also keep track of how many numeric
+        # fields and what the size of those fields are required to create this
+        # element.
+        self._bytes = struct.calcsize(self.format[-1])
+        self._signed = self.format[-1] in 'bhilq'
+
     @staticmethod
     def valid(field):
         """
@@ -42,13 +49,10 @@ class ElementBase(Element):
 
         The basics have already been validated by the Element factory class,
         validate the specific struct format now.
-
-        Basic elements don't support numeric modifiers, since that requires a
-        list of values.
         """
         return len(field) == 2 \
             and isinstance(field[1], str) \
-            and re.match(r'[?nNfdP]', field[1])
+            and re.match(r'\d*[bBhHiIlLqQ]', field[1])
 
     def changemode(self, mode):
         """change the mode of the struct format"""
@@ -59,10 +63,30 @@ class ElementBase(Element):
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
-        return self._struct.pack(msg[self.name])
+        # Take a single numeric value and convert it into the necessary list
+        # of values required by the specified format.
+        val = msg[self.name]
+        assert isinstance(val, numbers.Number)
+        # Convert the number into a list of bytes
+        val_list = val.to_bytes(struct.calcsize(self.format),
+                                byteorder=self._mode.to_byteorder(),
+                                signed=self._signed)
+        # join the byte list into the expected number of values
+        val = [int.from_bytes(val_list[i:i + self._bytes],  # pylint: disable=no-member
+                              byteorder=self._mode.to_byteorder(),
+                              signed=self._signed)
+               for i in range(0, len(val_list), self._bytes)]
+        return self._struct.pack(*val)
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         ret = self._struct.unpack_from(buf, 0)
         unused = buf[struct.calcsize(self.format):]
-        return (ret[0], unused)
+        # merge the unpacked data into a byte array
+        data = [v.to_bytes(self._bytes, byteorder=self._mode.to_byteorder(),
+                           signed=self._signed) for v in ret]
+        # Join the returned list of numbers into a single value
+        val = int.from_bytes(b''.join(data),  # pylint: disable=no-member
+                             byteorder=self._mode.to_byteorder(),
+                             signed=self._signed)
+        return (val, unused)

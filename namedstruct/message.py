@@ -9,6 +9,8 @@ from namedstruct.elementdiscriminated import ElementDiscriminated
 from namedstruct.elementvariable import ElementVariable
 from namedstruct.elementlength import ElementLength
 from namedstruct.elementenum import ElementEnum
+from namedstruct.elementstring import ElementString
+from namedstruct.elementnum import ElementNum
 from namedstruct.elementpad import ElementPad
 from namedstruct.elementbase import ElementBase
 
@@ -18,6 +20,8 @@ Element.register(ElementDiscriminated)
 Element.register(ElementVariable)
 Element.register(ElementLength)
 Element.register(ElementEnum)
+Element.register(ElementString)
+Element.register(ElementNum)
 Element.register(ElementPad)
 Element.register(ElementBase)
 
@@ -71,6 +75,15 @@ class Message(object):
         # correct fields.
         named_fields = [elem.name for elem in self._elements.values() if elem.name]
         self._tuple = collections.namedtuple(self.name, named_fields)
+
+    def changemode(self, mode):
+        """ Change the mode of a message. """
+        if not isinstance(mode, namedstruct.modes.Mode):
+            raise TypeError('invalid mode: {}'.format(mode))
+
+        # Change the mode for all elements
+        for key in self._elements.keys():
+            self._elements[key].changemode(mode)
 
     def _validate(self):
         """
@@ -156,7 +169,7 @@ class Message(object):
             elif isinstance(elem, ElementVariable):
                 val = [elem.format.make(e) for e in kwargs[elem.name]]
                 msg = msg._replace(**dict([(elem.name, val)]))
-            elif isinstance(elem, (ElementLength, ElementEnum, ElementBase)):
+            elif isinstance(elem, (ElementLength, ElementEnum, ElementBase, ElementNum, ElementString)):
                 msg = msg._replace(**dict([(elem.name, kwargs[elem.name])]))
             elif isinstance(elem, ElementPad):  # pragma: no cover (else unreachable)
                 # There is no element to transform

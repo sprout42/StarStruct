@@ -166,7 +166,7 @@ fix: depends-dev
 
 # Testing ######################################################################
 
-PYTEST_OPTS := --doctest-modules --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
+PYTEST_OPTS := -s --doctest-modules --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
 
 .PHONY: test
 # python -m unittest discover

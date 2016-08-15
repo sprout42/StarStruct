@@ -15,10 +15,8 @@ class TestElementBase(unittest.TestCase):
         """Test field formats that are valid ElementBase elements."""
 
         test_fields = [
-            ('a', 'b'),     # signed byte: -128, 127
-            ('b', 'H'),     # unsigned short: 0, 65535
-            ('c', '10s'),   # 10 byte string
-            ('d', 'L'),     # unsigned long: 0, 2^32-1
+            ('a', 'd'),     # double
+            ('b', 'f'),     # float
             ('e', '?'),     # bool: 0, 1
         ]
 
@@ -35,7 +33,11 @@ class TestElementBase(unittest.TestCase):
             ('b', 'z'),     # invalid
             ('c', '1'),     # invalid
             ('d', '9S'),    # invalid (must be lowercase)
-            ('e', '/'),     # invalid
+            ('e', 'b'),     # signed byte: -128, 127
+            ('f', 'H'),     # unsigned short: 0, 65535
+            ('g', '10s'),   # 10 byte string
+            ('h', 'L'),     # unsigned long: 0, 2^32-1
+            ('i', '/'),     # invalid
         ]
 
         for field in test_fields:

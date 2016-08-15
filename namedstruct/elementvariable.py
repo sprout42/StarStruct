@@ -19,8 +19,11 @@ class ElementVariable(Element):
         self.ref = field[2]
 
         # Variable elements don't use the normal struct format, the format is
-        # a NamedStruct.Message object.
+        # a NamedStruct.Message object, but change the mode to match the
+        # current mode.
+        self._mode = mode
         self.format = field[1]
+        self.format.changemode(mode)
 
     @staticmethod
     def valid(field):
@@ -34,6 +37,11 @@ class ElementVariable(Element):
         return len(field) == 3 \
             and isinstance(field[1], namedstruct.message.Message) \
             and isinstance(field[2], str)
+
+    def changemode(self, mode):
+        """change the mode of the message format"""
+        self._mode = mode
+        self.format.changemode(mode)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""

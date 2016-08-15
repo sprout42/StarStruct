@@ -42,8 +42,15 @@ class ElementLength(Element):
         """
         return len(field) == 3 \
             and isinstance(field[1], str) \
-            and re.match(r'\d*[BHILQ]', field[1]) \
+            and re.match(r'[BHILQ]', field[1]) \
             and isinstance(field[2], str) and len(field[2])
+
+    def changemode(self, mode):
+        """change the mode of the struct format"""
+        self._mode = mode
+        self.format = mode.value + self.format[1:]
+        # recreate the struct with the new format
+        self._struct = struct.Struct(self.format)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""

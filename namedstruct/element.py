@@ -82,6 +82,10 @@ class Element(object):
         """Require element objects to implement this function."""
         raise NotImplementedError
 
+    def changemode(self, mode):
+        """Require element objects to implement this function."""
+        raise NotImplementedError
+
     def pack(self, msg):
         """Require element objects to implement this function."""
         raise NotImplementedError

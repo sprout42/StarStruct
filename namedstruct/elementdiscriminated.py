@@ -22,7 +22,12 @@ class ElementDiscriminated(Element):
         # is the supplied dictionary where the key is a value of the referenced
         # enum element, and the value for each entry is a NamedStruct.Message
         # object.
+        self._mode = mode
         self.format = field[1]
+
+        # but change the mode to match the current mode.
+        for key in self.format.keys():
+            self.format[key].changemode(mode)
 
     @staticmethod
     def valid(field):
@@ -38,6 +43,12 @@ class ElementDiscriminated(Element):
             and isinstance(field[2], str) \
             and all(isinstance(val, (namedstruct.message.Message, type(None)))
                     for val in field[1].values())
+
+    def changemode(self, mode):
+        """change the mode of each message format"""
+        self._mode = mode
+        for key in self.format.keys():
+            self.format[key].changemode(mode)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
