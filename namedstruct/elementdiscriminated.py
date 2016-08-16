@@ -27,7 +27,8 @@ class ElementDiscriminated(Element):
 
         # but change the mode to match the current mode.
         for key in self.format.keys():
-            self.format[key].changemode(mode)
+            if self.format[key]:
+                self.format[key].changemode(mode)
 
     @staticmethod
     def valid(field):
@@ -48,7 +49,8 @@ class ElementDiscriminated(Element):
         """change the mode of each message format"""
         self._mode = mode
         for key in self.format.keys():
-            self.format[key].changemode(mode)
+            if self.format[key]:
+                self.format[key].changemode(mode)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
