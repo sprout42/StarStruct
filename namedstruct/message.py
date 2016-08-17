@@ -93,7 +93,7 @@ class Message(object):
         """
         # First check to see if the passed in object is a namedtuple
         # that matches this message type
-        if isinstance(other, self._tuple):
+        if not isinstance(other, self._tuple):
             return False
 
         # Then check any element values that may be another message type to
@@ -101,7 +101,7 @@ class Message(object):
         for key in self._elements.keys():
             if isinstance(self._elements[key], namedstruct.elementvariable.ElementVariable):
                 msg = self._elements[key].format
-                if not hasattr(other, key) or not msg.is_unpacked(getattr(other, key)):
+                if not msg.is_unpacked(getattr(other, key)):
                     return False
             elif isinstance(self._elements[key], namedstruct.elementdiscriminated.ElementDiscriminated):
                 # Select the correct message object based on the value of the
@@ -110,7 +110,7 @@ class Message(object):
                 if ref_val not in self._elements[key].format.keys():
                     return False
                 msg = self._elements[key].format[ref_val]
-                if not hasattr(other, key) or not msg.is_unpacked(getattr(other, key)):
+                if not msg.is_unpacked(getattr(other, key)):
                     return False
         return True
 
