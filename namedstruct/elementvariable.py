@@ -48,7 +48,8 @@ class ElementVariable(Element):
         # When packing use the length of the current element to determine
         # how many elements to pack, not the length element of the message
         # (which should not be specified manually).
-        ret = [self.format.pack(dict(elem)) for elem in msg[self.name]]
+        ret = [self.format.pack(dict(elem)) if elem else self.format.pack({})
+               for elem in msg[self.name]]
         return b''.join(ret)
 
     def unpack(self, msg, buf):

@@ -57,8 +57,16 @@ class ElementDiscriminated(Element):
         # When packing use the value of the referenced element to determine
         # which field format to use to pack this element.  Be sure to check if
         # the referenced format is None or a Message object.
+        if msg[self.ref] not in self.format:
+            msg = 'invalid value {} for element {}:{}'.format(
+                msg[self.ref], self.name, self.format.keys())
+            raise ValueError(msg)
+
         if self.format[msg[self.ref]]:
-            return self.format[msg[self.ref]].pack(dict(msg[self.name]))
+            if msg[self.name]:
+                return self.format[msg[self.ref]].pack(dict(msg[self.name]))
+            else:
+                return self.format[msg[self.ref]].pack({})
         else:
             return b''
 
