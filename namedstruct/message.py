@@ -85,6 +85,35 @@ class Message(object):
         for key in self._elements.keys():
             self._elements[key].changemode(mode)
 
+    def is_unpacked(self, other):
+        """
+        Provide a function that allows checking if an unpacked message tuple
+        is an instance of what could be unpacked from a particular message
+        object.
+        """
+        # First check to see if the passed in object is a namedtuple
+        # that matches this message type
+        if isinstance(other, self._tuple):
+            return False
+
+        # Then check any element values that may be another message type to
+        # ensure that the sub-elements are valid types.
+        for key in self._elements.keys():
+            if isinstance(self._elements[key], namedstruct.elementvariable.ElementVariable):
+                msg = self._elements[key].format
+                if not msg.is_unpacked(getattr(other, key)):
+                    return False
+            elif isinstance(self._elements[key], namedstruct.elementdiscriminated.ElementDiscriminated):
+                # Select the correct message object based on the value of the
+                # referenced item
+                ref_val = getattr(other, self._elements[key].ref)
+                if ref_val not in self._elements[key].format.keys():
+                    return False
+                msg = self._elements[key].format[ref_val]
+                if not msg.is_unpacked(getattr(other, key)):
+                    return False
+        return True
+
     def _validate(self):
         """
         A static function that validates the individual elements of a message
