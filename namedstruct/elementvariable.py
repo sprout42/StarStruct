@@ -59,6 +59,6 @@ class ElementVariable(Element):
         ret = []
         unused = buf
         for i in range(getattr(msg, self.ref)):  # pylint: disable=unused-variable
-            (val, unused) = self.format.unpack(unused)
+            (val, unused) = self.format.unpack_partial(unused)
             ret.append(val)
         return (ret, unused)

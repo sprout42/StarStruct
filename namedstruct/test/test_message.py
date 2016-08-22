@@ -175,9 +175,11 @@ class TestNamedstruct(unittest.TestCase):
         test_msg = Message('test', self.teststruct, Mode.Little)
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
-                (unpacked_msg, unused) = test_msg.unpack(self.testbytes['little'][idx])
-                self.assertEqual(unused, b'')
+                (unpacked_partial_msg, unused) = test_msg.unpack_partial(self.testbytes['little'][idx] + b'\xde\xad')
+                self.assertEqual(unused, b'\xde\xad')
+                unpacked_msg = test_msg.unpack(self.testbytes['little'][idx])
                 expected_tuple = test_msg.make(**self.testvalues[idx])  # pylint: disable=protected-access
+                self.assertEqual(unpacked_msg, unpacked_partial_msg)
                 self.assertEqual(unpacked_msg, expected_tuple)
 
     def test_pack_big_endian(self):

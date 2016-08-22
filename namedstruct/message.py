@@ -172,8 +172,14 @@ class Message(object):
             kwargs = obj
         return b''.join([elem.pack(kwargs) for elem in self._elements.values()])
 
-    def unpack(self, buf):
-        """Unpack the buffer using the initialized format."""
+    def unpack_partial(self, buf):
+        """
+        Unpack a partial message from a buffer.
+
+        This doesn't re-use the "unpack_from" function name from the struct
+        module because the parameters and return values are not consistent
+        between this function and the struct module.
+        """
         msg = self._tuple._make([None] * len(self._tuple._fields))
         for elem in self._elements.values():
             (val, unused) = elem.unpack(msg, buf)
@@ -182,6 +188,12 @@ class Message(object):
             if elem.name:
                 msg = msg._replace(**dict([(elem.name, val)]))
         return (msg, buf)
+
+    def unpack(self, buf):
+        """Unpack the buffer using the initialized format."""
+        (msg, unused) = self.unpack_partial(buf)
+        assert unused is b''
+        return msg
 
     def make(self, obj=None, **kwargs):
         """

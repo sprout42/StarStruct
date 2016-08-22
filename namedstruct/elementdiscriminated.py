@@ -77,6 +77,6 @@ class ElementDiscriminated(Element):
         # specific value is None rather than a Message object, return no new
         # parsed data.
         if self.format[getattr(msg, self.ref)]:
-            return self.format[getattr(msg, self.ref)].unpack(buf)
+            return self.format[getattr(msg, self.ref)].unpack_partial(buf)
         else:
             return (None, buf)
