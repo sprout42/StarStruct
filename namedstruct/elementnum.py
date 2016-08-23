@@ -73,6 +73,8 @@ class ElementNum(Element):
 
         # If the value supplied is not already a bytes object, convert it now.
         if not isinstance(val, bytes):
+            val_list = val
+        else:
             val_list = val.to_bytes(struct.calcsize(self.format),
                                     byteorder=self._mode.to_byteorder(),
                                     signed=self._signed)
