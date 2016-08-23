@@ -193,8 +193,8 @@ class Message(object):
         """Unpack the buffer using the initialized format."""
         (msg, unused) = self.unpack_partial(buf)
         if unused:
-            msg = 'buffer not fully used by unpack: {}'.format(unused)
-            raise ValueError(msg)
+            error = 'buffer not fully used by unpack: {}'.format(unused)
+            raise ValueError(error)
         return msg
 
     def make(self, obj=None, **kwargs):
@@ -202,7 +202,7 @@ class Message(object):
         A utility function that returns a namedtuple based on the current
         object's format for the supplied object.
         """
-        if obj and isinstance(obj, dict):
+        if obj is not None and isinstance(obj, dict):
             kwargs = obj
         msg = self._tuple._make([None] * len(self._tuple._fields))
         for elem in self._elements.values():
