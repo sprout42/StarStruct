@@ -70,11 +70,15 @@ class ElementNum(Element):
         # This should be a number, but handle cases where it's an enum
         if isinstance(val, enum.Enum):
             val = val.value
-        # Convert the number into a list of bytes
-        val_list = val.to_bytes(struct.calcsize(self.format),
-                                byteorder=self._mode.to_byteorder(),
-                                signed=self._signed)
-        # join the byte list into the expected number of values
+
+        # If the value supplied is not already a bytes object, convert it now.
+        if not isinstance(val, bytes):
+            val_list = val.to_bytes(struct.calcsize(self.format),
+                                    byteorder=self._mode.to_byteorder(),
+                                    signed=self._signed)
+
+        # join the byte list into the expected number of values to pack the
+        # specified struct format.
         val = [int.from_bytes(val_list[i:i + self._bytes],  # pylint: disable=no-member
                               byteorder=self._mode.to_byteorder(),
                               signed=self._signed)
