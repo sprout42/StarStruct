@@ -192,7 +192,9 @@ class Message(object):
     def unpack(self, buf):
         """Unpack the buffer using the initialized format."""
         (msg, unused) = self.unpack_partial(buf)
-        assert unused is b''
+        if unused:
+            msg = 'buffer not fully used by unpack: {}'.format(unused)
+            raise ValueError(msg)
         return msg
 
     def make(self, obj=None, **kwargs):
