@@ -2,7 +2,7 @@
 
 import struct
 import re
-import numbers
+import enum
 
 from namedstruct.element import Element
 from namedstruct.modes import Mode
@@ -66,7 +66,10 @@ class ElementNum(Element):
         # Take a single numeric value and convert it into the necessary list
         # of values required by the specified format.
         val = msg[self.name]
-        assert isinstance(val, numbers.Number)
+
+        # This should be a number, but handle cases where it's an enum
+        if isinstance(val, enum.Enum):
+            val = val.value
         # Convert the number into a list of bytes
         val_list = val.to_bytes(struct.calcsize(self.format),
                                 byteorder=self._mode.to_byteorder(),
