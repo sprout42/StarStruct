@@ -202,8 +202,11 @@ class Message(object):
         A utility function that returns a namedtuple based on the current
         object's format for the supplied object.
         """
-        if obj is not None and isinstance(obj, dict):
-            kwargs = obj
+        if obj is not None:
+            if isinstance(obj, dict):
+                kwargs = obj
+            elif isinstance(obj, tuple):
+                kwargs = obj._asdict()
         msg = self._tuple._make([None] * len(self._tuple._fields))
         for elem in self._elements.values():
             if isinstance(elem, ElementDiscriminated):
