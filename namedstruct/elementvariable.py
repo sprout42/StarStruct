@@ -21,9 +21,8 @@ class ElementVariable(Element):
         # Variable elements don't use the normal struct format, the format is
         # a NamedStruct.Message object, but change the mode to match the
         # current mode.
-        self._mode = mode
         self.format = field[1]
-        self.format.changemode(mode)
+        self.changemode(mode)
 
     @staticmethod
     def valid(field):

@@ -22,13 +22,10 @@ class ElementDiscriminated(Element):
         # is the supplied dictionary where the key is a value of the referenced
         # enum element, and the value for each entry is a NamedStruct.Message
         # object.
-        self._mode = mode
         self.format = field[1]
 
         # but change the mode to match the current mode.
-        for key in self.format.keys():
-            if self.format[key]:
-                self.format[key].changemode(mode)
+        self.changemode(mode)
 
     @staticmethod
     def valid(field):
