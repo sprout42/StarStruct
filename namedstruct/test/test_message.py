@@ -20,24 +20,6 @@ class SimpleEnum(enum.Enum):
 class TestNamedstruct(unittest.TestCase):
     """NamedStruct module tests"""
 
-    # Variable structure
-    testvarstruct = Message('VarTest', [('x', 'B'), ('y', 'B')])
-
-    # Discriminated struct 1
-    teststruct1 = Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'i')])
-
-    # Discriminated struct 2
-    teststruct2 = Message('Struct2', [('z', '20s')])
-
-    # Discriminated struct 2
-    teststruct3 = Message('Struct3', [])
-
-    # structure used for all tests, exercises a range of struct formats.  It
-    # isn't necessary to test them all because we don't need to test all of the
-    # struct module, just enough to ensure that the values and patterns are
-    # matched up properly by the NamedStruct class.
-    #
-    # Total size of this format is 18 bytes.
     teststruct = [
         ('a', 'b'),                            # signed byte: -128, 127
         ('pad1', '3x'),                        # 3 pad bytes
@@ -48,11 +30,13 @@ class TestNamedstruct(unittest.TestCase):
         ('e', '2H'),                           # 4 unsigned bytes: 0, 2^32-1
         ('type', 'B', SimpleEnum),             # unsigned byte, enum validated
         ('length', 'H', 'vardata'),            # unsigned short length field
-        ('vardata', testvarstruct, 'length'),  # variable length data
+        ('vardata',                            # variable length data
+         Message('VarTest', [('x', 'B'), ('y', 'B')]),
+         'length'),
         ('data', {                             # discriminated data
-            SimpleEnum.one: teststruct1,
-            SimpleEnum.two: teststruct2,
-            SimpleEnum.three: teststruct3,
+            SimpleEnum.one: Message('Struct1', [('y', 'B'), ('pad', '3x'), ('z', 'i')]),
+            SimpleEnum.two: Message('Struct2', [('z', '20s')]),
+            SimpleEnum.three: Message('Struct3', []),
         }, 'type'),
     ]
 
@@ -189,3 +173,15 @@ class TestNamedstruct(unittest.TestCase):
             with self.subTest(idx):  # pylint: disable=no-member
                 packed_msg = test_msg.pack(**self.testvalues[idx])
                 self.assertEqual(self.testbytes['big'][idx], packed_msg)
+
+    def test_unpack_big_endian(self):
+        """Test unpack the test formats."""
+        test_msg = Message('test', self.teststruct, Mode.Big)
+        for idx in range(len(self.testvalues)):
+            with self.subTest(idx):  # pylint: disable=no-member
+                (unpacked_partial_msg, unused) = test_msg.unpack_partial(self.testbytes['big'][idx] + b'\xde\xad')
+                self.assertEqual(unused, b'\xde\xad')
+                unpacked_msg = test_msg.unpack(self.testbytes['big'][idx])
+                expected_tuple = test_msg.make(**self.testvalues[idx])  # pylint: disable=protected-access
+                self.assertEqual(unpacked_msg, unpacked_partial_msg)
+                self.assertEqual(unpacked_msg, expected_tuple)
