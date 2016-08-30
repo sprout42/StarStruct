@@ -210,7 +210,12 @@ class Message(object):
         msg = self._tuple._make([None] * len(self._tuple._fields))
         for elem in self._elements.values():
             if isinstance(elem, ElementDiscriminated):
-                val = elem.format[kwargs[elem.ref]].make(kwargs[elem.name])
+                if elem.format[kwargs[elem.ref]]:
+                    val = elem.format[kwargs[elem.ref]].make(kwargs[elem.name])
+                else:
+                    # `None` does not have a `.make()` function
+                    # so set the value to None
+                    val = None
                 msg = msg._replace(**dict([(elem.name, val)]))
             elif isinstance(elem, ElementVariable):
                 val = [elem.format.make(e) for e in kwargs[elem.name]]
