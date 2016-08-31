@@ -6,6 +6,7 @@ from namedstruct.element import Element
 
 # Import the element types
 from namedstruct.elementdiscriminated import ElementDiscriminated
+from namedstruct.elementfixedpoint import ElementFixedPoint
 from namedstruct.elementvariable import ElementVariable
 from namedstruct.elementlength import ElementLength
 from namedstruct.elementenum import ElementEnum
@@ -22,6 +23,7 @@ Element.register(ElementLength)
 Element.register(ElementEnum)
 Element.register(ElementString)
 Element.register(ElementNum)
+Element.register(ElementFixedPoint)
 Element.register(ElementPad)
 Element.register(ElementBase)
 
