@@ -4,8 +4,39 @@
 
 import unittest
 
-from namedstruct.elementfixedpoint import ElementFixedPoint
+from decimal import Decimal
+
+from namedstruct.elementfixedpoint import ElementFixedPoint, get_fixed_bits
 from namedstruct.modes import Mode
+
+
+class TestElementFixedPointHelpers(unittest.TestCase):
+    """Test the helpers for this class"""
+    def test_invalid_higher_bits(self):
+        with self.assertRaises(ValueError):
+            get_fixed_bits(257, 16, 8)
+
+        with self.assertRaises(ValueError):
+            get_fixed_bits(256, 16, 8)
+
+        with self.assertRaises(ValueError):
+            get_fixed_bits('hello', 16, 3)
+
+        with self.assertRaises(ValueError):
+            get_fixed_bits(Decimal('20'), 8, 4)
+
+    def test_valid_higher_bits(self):
+        """Just make sure these all don't fail"""
+        get_fixed_bits(255, 16, 8)
+        get_fixed_bits(15.5, 16, 4)
+        get_fixed_bits(22.75, 16, 11)
+        get_fixed_bits(Decimal('13.0'), 32, 16)
+
+    def test_zero(self):
+        assert get_fixed_bits(0, 16, 8, '>H') == (0).to_bytes(2, 'big')
+
+    def test_basic_example(self):
+        assert get_fixed_bits(15, 8, 4, '<B') == (15 * 2**4).to_bytes(1, 'little')
 
 
 class TestElementFixedPoint(unittest.TestCase):

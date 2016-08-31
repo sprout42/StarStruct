@@ -1,6 +1,7 @@
 import struct
 
 import re
+import struct
 
 from decimal import Decimal
 
@@ -8,10 +9,30 @@ from namedstruct.element import Element
 from namedstruct.modes import Mode
 
 
-def get_lower_bits(num, precision):
+def get_fixed_bits(num, bits, precision, pack_format=None):
     """
-    Helper function to convert a decimal value to the bits of fixed point
+    Helper function to get the right bytes once we're done
     """
+    if not isinstance(num, Decimal):
+        try:
+            num = Decimal(num)
+        except:
+            raise ValueError('Num {0} could not be converted to a Decimal'.format(num))
+
+    if num >= 2 ** (bits - precision):
+        raise ValueError('num: {0} must fit in the specified number of available bits {1}'.format(num, bits - precision))
+
+    # Mask off the bits we care about
+    # mask = (2**bits) - 1
+    # Check if the value trying to be converted is larger than the proposed
+    # format
+    # assert num <= mask
+    # return num & mask
+
+    num_shifted = int(num * (2 ** precision))
+
+    if pack_format:
+        return struct.pack(pack_format, num_shifted)
 
 
 class ElementFixedPoint(Element):
