@@ -5,6 +5,7 @@
 import unittest
 
 from namedstruct.elementfixedpoint import ElementFixedPoint
+from namedstruct.modes import Mode
 
 
 class TestElementFixedPoint(unittest.TestCase):
@@ -39,3 +40,22 @@ class TestElementFixedPoint(unittest.TestCase):
             with self.subTest(field):  # pylint: disable=no-member
                 out = ElementFixedPoint.valid(field)
                 self.assertFalse(out)
+
+    def test_valid_pack(self):
+        """Test packing valid fixed point values."""
+
+        field = ('a', 'F', 16, 8)
+        self.assertTrue(ElementFixedPoint.valid(field))
+        elem = ElementFixedPoint(field, Mode.Big)
+
+        test_values = [
+            ({'a': '4'}, b'0000010000000000'),
+            ({'a': 13.5}, 0),
+            ({'a': '13.5'}, 0),
+            ({'a': '13.500'}, 0),
+        ]
+
+        for (in_val, out_val) in test_values:
+            with self.subTest((out_val, in_val)):  # pylint: disable=no-member
+                ret = elem.pack(in_val)
+                self.assertEqual(ret, out_val)
