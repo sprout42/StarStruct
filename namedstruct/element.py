@@ -93,3 +93,7 @@ class Element(object):
     def unpack(self, msg, buf):
         """Require element objects to implement this function."""
         raise NotImplementedError
+
+    def make(self, msg):
+        """Require element objects to implement this function."""
+        raise NotImplementedError

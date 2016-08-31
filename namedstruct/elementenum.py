@@ -67,3 +67,7 @@ class ElementEnum(Element):
         unused = buf[struct.calcsize(self.format):]
         # Convert the returned value to the referenced Enum type
         return (self.ref(ret[0]), unused)
+
+    def make(self, msg):
+        """Return the "transformed" value for this element"""
+        return self.ref(msg[self.name])

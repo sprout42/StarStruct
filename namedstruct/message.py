@@ -208,16 +208,8 @@ class Message(object):
             elif isinstance(obj, tuple):
                 kwargs = obj._asdict()
         msg = self._tuple._make([None] * len(self._tuple._fields))
-        for elem in self._elements.values():
-            if isinstance(elem, ElementDiscriminated):
-                val = elem.format[kwargs[elem.ref]].make(kwargs[elem.name])
-                msg = msg._replace(**dict([(elem.name, val)]))
-            elif isinstance(elem, ElementVariable):
-                val = [elem.format.make(e) for e in kwargs[elem.name]]
-                msg = msg._replace(**dict([(elem.name, val)]))
-            elif isinstance(elem, (ElementLength, ElementEnum, ElementBase, ElementNum, ElementString)):
-                msg = msg._replace(**dict([(elem.name, kwargs[elem.name])]))
-            elif isinstance(elem, ElementPad):  # pragma: no cover (else unreachable)
-                # There is no element to transform
-                pass
+        # Only attempt to "make" fields that are in the tuple
+        for field in self._tuple._fields:
+            val = self._elements[field].make(kwargs)
+            msg = msg._replace(**dict([(field, val)]))
         return msg
