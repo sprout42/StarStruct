@@ -12,31 +12,49 @@ from namedstruct.modes import Mode
 
 class TestElementFixedPointHelpers(unittest.TestCase):
     """Test the helpers for this class"""
+    def test_invalid_formats(self):
+        with self.assertRaises(ValueError):
+            get_fixed_bits(5, 'Z', 1)
+
+        with self.assertRaises(ValueError):
+            get_fixed_bits(8, 'f', 4)
+
+        # TODO: Make sure that it won't accept more than one number?
+
+    def test_valid_formats(self):
+        get_fixed_bits(5, 'h', 1)
+        get_fixed_bits(15, 'L', 0)
+
     def test_invalid_higher_bits(self):
         with self.assertRaises(ValueError):
-            get_fixed_bits(257, 16, 8)
+            get_fixed_bits(257, 'i', 8)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits(256, 16, 8)
+            get_fixed_bits(256, 'i', 8)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits('hello', 16, 3)
+            get_fixed_bits('hello', 'i', 3)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits(Decimal('20'), 8, 4)
+            get_fixed_bits(Decimal('20'), 'h', 4)
 
     def test_valid_higher_bits(self):
         """Just make sure these all don't fail"""
-        get_fixed_bits(255, 16, 8)
-        get_fixed_bits(15.5, 16, 4)
-        get_fixed_bits(22.75, 16, 11)
-        get_fixed_bits(Decimal('13.0'), 32, 16)
+        get_fixed_bits(255, 'I', 8)
+        get_fixed_bits(15.5, 'I', 4)
+        get_fixed_bits(22.75, 'i', 11)
+        get_fixed_bits(Decimal('13.0'), 'q', 16)
 
     def test_zero(self):
-        assert get_fixed_bits(0, 16, 8, '>H') == (0).to_bytes(2, 'big')
+        assert get_fixed_bits(0, 'H', 8) == (0).to_bytes(2, 'big')
 
     def test_basic_example(self):
-        assert get_fixed_bits(15, 8, 4, '<B') == (15 * 2**4).to_bytes(1, 'little')
+        assert get_fixed_bits(Decimal('0.9375'), 'B', 4) == (15).to_bytes(1, 'little')
+
+    def test_another_example(self):
+        assert get_fixed_bits(Decimal('12.9375'), 'h', 4) == (192 + 15).to_bytes(2, 'little')
+        assert get_fixed_bits(Decimal('12.9375'), 'i', 4) == (192 + 15).to_bytes(4, 'little')
+        assert get_fixed_bits(Decimal('12.9375'), 'q', 4) == (192 + 15).to_bytes(8, 'little')
 
 
 class TestElementFixedPoint(unittest.TestCase):
@@ -46,9 +64,9 @@ class TestElementFixedPoint(unittest.TestCase):
         """Test field formats that are valid fixedpoint elements."""
 
         test_fields = [
-            ('a', 'F', 16, 8),
-            ('b', '3F', 8, 4),
-            ('c', 'F', 8, 7),
+            ('a', 'F', 'i', 8),
+            ('b', 'F', 'h', 4),
+            ('c', 'F', 'h', 7),
         ]
 
         for field in test_fields:
@@ -75,18 +93,25 @@ class TestElementFixedPoint(unittest.TestCase):
     def test_valid_pack(self):
         """Test packing valid fixed point values."""
 
-        field = ('a', 'F', 16, 8)
+        precision = 8
+        field = ('a', 'F', 'i', precision)
         self.assertTrue(ElementFixedPoint.valid(field))
         elem = ElementFixedPoint(field, Mode.Big)
 
         test_values = [
-            ({'a': '4'}, b'0000010000000000'),
-            ({'a': 13.5}, 0),
-            ({'a': '13.5'}, 0),
-            ({'a': '13.500'}, 0),
+            ({'a': '4'}, 4),
+            ({'a': 13.5}, 13.5),
+            ({'a': '13.5'}, '13.5'),
+            ({'a': '13.500'}, '13.500'),
+            ({'a': Decimal('13.500')}, '13.500'),
         ]
 
+        multiplier = 2 ** precision
         for (in_val, out_val) in test_values:
-            with self.subTest((out_val, in_val)):  # pylint: disable=no-member
-                ret = elem.pack(in_val)
-                self.assertEqual(ret, out_val)
+            ret = elem.pack(in_val)
+
+            if not isinstance(out_val, Decimal):
+                out_val = Decimal(out_val)
+
+            print(out_val * multiplier)
+            self.assertEqual(ret, int((out_val * multiplier)).to_bytes(4, 'big'))

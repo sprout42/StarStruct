@@ -1,4 +1,3 @@
-import struct
 
 import re
 import struct
@@ -9,7 +8,36 @@ from namedstruct.element import Element
 from namedstruct.modes import Mode
 
 
-def get_fixed_bits(num, bits, precision, pack_format=None):
+bits_format = {
+    ('c', 'b', 'B'): 1,
+    ('h', 'H'): 2,
+    ('i', 'I', 'l', 'L'): 4,
+    ('q', 'Q'): 8
+}
+
+
+def get_bits_length(pack_format):
+    if pack_format[0] in ['@', '=', '<', '>', '+']:
+        pack_format = pack_format[1:]
+
+    bits = -1
+    for fmt in bits_format:
+        match_str = r'|'.join(fmt)
+        # match_str = r'(@|=|<|>|+)' + match_str
+        # match_str = r'*' + match_str + r'*'
+
+        if re.match(match_str, pack_format):
+            bits = bits_format[fmt] * 4
+
+    if bits == -1:
+        raise ValueError('Pack format {0} was not a valid fixed point specifier'.format(
+            pack_format)
+        )
+
+    return bits
+
+
+def get_fixed_bits(num, pack_format, precision):
     """
     Helper function to get the right bytes once we're done
     """
@@ -19,8 +47,16 @@ def get_fixed_bits(num, bits, precision, pack_format=None):
         except:
             raise ValueError('Num {0} could not be converted to a Decimal'.format(num))
 
+    bits = get_bits_length(pack_format)
+
+    if bits < precision:
+        raise ValueError('Specified a format {1} that was too small for the given precision of {0}'.format(
+            pack_format,
+            precision
+        ))
+
     if num >= 2 ** (bits - precision):
-        raise ValueError('num: {0} must fit in the specified number of available bits {1}'.format(num, bits - precision))
+        raise ValueError('num: {0} must fit in the specified number of available bits {1}'.format(num, 8 * (bits - precision)))
 
     # Mask off the bits we care about
     # mask = (2**bits) - 1
@@ -31,8 +67,7 @@ def get_fixed_bits(num, bits, precision, pack_format=None):
 
     num_shifted = int(num * (2 ** precision))
 
-    if pack_format:
-        return struct.pack(pack_format, num_shifted)
+    return struct.pack(pack_format, num_shifted)
 
 
 class ElementFixedPoint(Element):
@@ -43,16 +78,15 @@ class ElementFixedPoint(Element):
 
     Example Usage:
 
-    example_bits = 16
-    example_precision = 8
-    example_struct = namedstruct.Message('example', [
-        ('my_fixed', 'F', example_bits, example_precision)
+    >>> example_precision = 8
+    >>> example_struct = namedstruct.Message('example', [
+            ('my_fixed_point', 'F', 'I', example_precision)
         ])
 
-    my_data = {
-        'my_fixed': '120.0'
-    }
-    packed_struct = example_struct.make(my_data)
+    >>> my_data = {
+            'my_fixed_point': '120.0'
+        }
+    >>> packed_struct = example_struct.make(my_data)
 
     """
 
@@ -61,7 +95,7 @@ class ElementFixedPoint(Element):
 
         # TODO: Add checks in the class factory?
         self.name = field[0]
-        self.bits = field[2]
+        self.pack_format = field[2]
         self.precision = field[3]
 
         # TODO: Do I need a ref here?
@@ -69,8 +103,7 @@ class ElementFixedPoint(Element):
 
         self._mode = mode
 
-        format_from_list = str(self.bits) + 'b'
-        self.format = mode.value + format_from_list
+        self.format = mode.value + self.pack_format
         self._struct = struct.Struct(self.format)
 
     @staticmethod
@@ -85,26 +118,28 @@ class ElementFixedPoint(Element):
         return len(field) == 4 \
             and isinstance(field[1], str) \
             and re.match(r'\d*F', field[1]) \
-            and isinstance(field[2], int) \
-            and isinstance(field[3], int) \
-            and field[2] > field[3]
+            and isinstance(field[2], str) \
+            and isinstance(field[3], (int, float, Decimal))
 
     def pack(self, msg):
         """Pack the provided values into the specified buffer."""
-        print(msg)
         try:
-            self.decimal = Decimal(msg[self.name])
+            packing_decimal = Decimal(msg[self.name])
         except:
-            self.decimal = Decimal(str(msg[self.name]))
+            packing_decimal = Decimal(str(msg[self.name]))
 
-        integer = int(self.decimal // 1)
-        top_bits = integer.to_bytes(int((self.bits - self.precision) / 8), self._mode.to_byteorder())
+        # integer = int(self.decimal // 1)
+        # top_bits = integer.to_bytes(int((self.bits - self.precision) / 8), self._mode.to_byteorder())
         # top_bits = b'{0:%db}' % (self.bits - self.precision)
         # top_bits = top_bits.format(integer)
 
-        bot_bits = b'0' * self.precision
+        # bot_bits = b'0' * self.precision
 
-        print('top_bits:', top_bits.bin)
-        print('bot_bits:', bot_bits)
-        print('all_bits:', top_bits + bot_bits)
-        self._struct.pack(top_bits + bot_bits)
+        # print('top_bits:', top_bits.bin)
+        # print('bot_bits:', bot_bits)
+        # print('all_bits:', top_bits + bot_bits)
+        # self._struct.pack(top_bits + bot_bits)
+        return get_fixed_bits(packing_decimal, self.format, self.precision)
+
+    def make(self):
+        pass
