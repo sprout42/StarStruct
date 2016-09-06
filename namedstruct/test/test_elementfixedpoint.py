@@ -113,5 +113,4 @@ class TestElementFixedPoint(unittest.TestCase):
             if not isinstance(out_val, Decimal):
                 out_val = Decimal(out_val)
 
-            print(out_val * multiplier)
             self.assertEqual(ret, int((out_val * multiplier)).to_bytes(4, 'big'))
