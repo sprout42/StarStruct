@@ -61,3 +61,10 @@ class ElementVariable(Element):
             (val, unused) = self.format.unpack_partial(unused)
             ret.append(val)
         return (ret, unused)
+
+    def make(self, msg):
+        """Return the expected "made" value"""
+        ret = []
+        for val in msg[self.name]:
+            ret.append(self.format.make(val))
+        return ret

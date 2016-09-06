@@ -63,3 +63,7 @@ class ElementLength(Element):
         ret = self._struct.unpack_from(buf, 0)
         unused = buf[struct.calcsize(self.format):]
         return (ret[0], unused)
+
+    def make(self, msg):
+        """Return the length of the referenced array"""
+        return len(msg[self.ref])

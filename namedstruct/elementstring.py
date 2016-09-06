@@ -97,3 +97,35 @@ class ElementString(Element):
         else:  # 'c'
             val = [c.decode() for c in val]
         return (val, unused)
+
+    def make(self, msg):
+        """Return a string of the expected format"""
+        val = msg[self.name]
+        size = struct.calcsize(self.format)
+        assert len(val) <= size
+
+        # If the supplied value is a list of chars, or a list of bytes, turn
+        # it into a string for ease of processing.
+        if isinstance(val, list):
+            if all(isinstance(c, bytes) for c in val):
+                val = ''.join([c.decode() for c in val])
+            elif all(isinstance(c, str) for c in val):
+                val = ''.join([c for c in val])
+            else:
+                error = 'Invalid value for string element: {}'
+                raise TypeError(error.format(val))
+        elif isinstance(val, bytes):
+            # If the supplied value is a byes, decode it into a normal string
+            val = val.decode()
+
+        # 'p' (pascal strings) and 'c' (char list) must be the exact size of
+        # the format
+        if self.format[-1] in ('p', 'c') and len(val) < size:
+            val += '\x00' * (size - len(val))
+
+        # Lastly, 'c' (char list) formats are expected to be a list of
+        # characters rather than a string.
+        if self.format[-1] == 'c':
+            val = [c for c in val]
+
+        return val

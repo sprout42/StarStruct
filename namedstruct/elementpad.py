@@ -64,3 +64,7 @@ class ElementPad(Element):
         """Unpack data from the supplied buffer using the initialized format."""
         unused = buf[struct.calcsize(self.format):]
         return (None, unused)
+
+    def make(self, msg):
+        """This shouldn't be called, but if called it returns nothing."""
+        return None

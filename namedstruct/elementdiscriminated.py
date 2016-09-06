@@ -46,7 +46,7 @@ class ElementDiscriminated(Element):
         """change the mode of each message format"""
         self._mode = mode
         for key in self.format.keys():
-            if self.format[key]:
+            if self.format[key] is not None:
                 self.format[key].changemode(mode)
 
     def pack(self, msg):
@@ -59,8 +59,8 @@ class ElementDiscriminated(Element):
                 msg[self.ref], self.name, self.format.keys())
             raise ValueError(msg)
 
-        if self.format[msg[self.ref]]:
-            if msg[self.name]:
+        if self.format[msg[self.ref]] is not None:
+            if msg[self.name] is not None:
                 return self.format[msg[self.ref]].pack(dict(msg[self.name]))
             else:
                 return self.format[msg[self.ref]].pack({})
@@ -73,7 +73,22 @@ class ElementDiscriminated(Element):
         # enum field to determine how many elements need unpacked.  If the
         # specific value is None rather than a Message object, return no new
         # parsed data.
-        if self.format[getattr(msg, self.ref)]:
+        #
+        # Use the getattr() function since the referenced value is an enum
+        if self.format[getattr(msg, self.ref)] is not None:
             return self.format[getattr(msg, self.ref)].unpack_partial(buf)
         else:
             return (None, buf)
+
+    def make(self, msg):
+        """Return the expected "made" value"""
+        if hasattr(msg, self.ref):
+            key = getattr(msg, self.ref)
+        else:
+            # Assume it's a dictionary, not a tuple
+            key = msg[self.ref]
+
+        if self.format[key] is not None:
+            return self.format[key].make(msg[self.name])
+        else:
+            return None

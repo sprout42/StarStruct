@@ -99,3 +99,40 @@ class ElementNum(Element):
                              byteorder=self._mode.to_byteorder(),
                              signed=self._signed)
         return (val, unused)
+
+    def make(self, msg):
+        """Return the expected "made" value"""
+        val = msg[self.name]
+
+        # This should be a number, but handle cases where it's an enum
+        if isinstance(val, enum.Enum):
+            val = val.value
+        elif isinstance(val, list):
+            # It's unlikely but possible that this could be a list of numbers,
+            # or a list of bytes
+            if all(isinstance(v, bytes) for v in val):
+                # To turn this into a single number, merge the bytes, later the
+                # bytes will be converted into a single number.
+                data = b''.join(val)
+            elif all(isinstance(v, int) for v in val):
+                # To turn this into a single number, convert the numbers into
+                # bytes, and merge the bytes, later the bytes will be converted
+                # into a single number.
+                data = [v.to_bytes(self._bytes,
+                                   byteorder=self._mode.to_byteorder(),
+                                   signed=self._signed) for v in val]
+            else:
+                error = 'Invalid value for numerical element: {}'
+                raise TypeError(error.format(val))
+        elif isinstance(val, bytes):
+            # If the value supplied is a bytes object, convert it to a number
+            data = val
+        elif isinstance(val, int):
+            return val
+        else:
+            error = 'Invalid value for numerical element: {}'
+            raise TypeError(error.format(val))
+
+        return int.from_bytes(data,  # pylint: disable=no-member
+                              byteorder=self._mode.to_byteorder(),
+                              signed=self._signed)
