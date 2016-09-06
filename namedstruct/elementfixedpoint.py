@@ -2,6 +2,7 @@
 import re
 import struct
 
+import decimal
 from decimal import Decimal
 
 from namedstruct.element import Element
@@ -37,7 +38,7 @@ def get_bits_length(pack_format):
     return bits
 
 
-def get_fixed_bits(num, pack_format, precision):
+def get_fixed_point(num, pack_format, precision):
     """
     Helper function to get the right bytes once we're done
     """
@@ -58,15 +59,12 @@ def get_fixed_bits(num, pack_format, precision):
     if num >= 2 ** (bits - precision):
         raise ValueError('num: {0} must fit in the specified number of available bits {1}'.format(num, 8 * (bits - precision)))
 
-    # Mask off the bits we care about
-    # mask = (2**bits) - 1
-    # Check if the value trying to be converted is larger than the proposed
-    # format
-    # assert num <= mask
-    # return num & mask
-
     num_shifted = int(num * (2 ** precision))
+    return num_shifted
 
+
+def get_fixed_bits(num, pack_format, precision):
+    num_shifted = get_fixed_point(num, pack_format, precision)
     return struct.pack(pack_format, num_shifted)
 
 
@@ -98,6 +96,11 @@ class ElementFixedPoint(Element):
         self.pack_format = field[2]
         self.precision = field[3]
 
+        if len(field) == 5:
+            self.decimal_prec = field[4]
+        else:
+            self.decimal_prec = False
+
         # TODO: Do I need a ref here?
         self.ref = None
 
@@ -115,7 +118,7 @@ class ElementFixedPoint(Element):
         The basics have already been validated by the Element factory class,
         validate the specific struct format now.
         """
-        return len(field) == 4 \
+        return len(field) >= 4 \
             and isinstance(field[1], str) \
             and re.match(r'\d*F', field[1]) \
             and isinstance(field[2], str) \
@@ -139,7 +142,22 @@ class ElementFixedPoint(Element):
         # print('bot_bits:', bot_bits)
         # print('all_bits:', top_bits + bot_bits)
         # self._struct.pack(top_bits + bot_bits)
-        return get_fixed_bits(packing_decimal, self.format, self.precision)
+        fixed_point = get_fixed_point(packing_decimal, self.format, self.precision)
+        return self._struct.pack(fixed_point)
+
+    def unpack(self, msg, buf):
+        """Unpack data from the supplied buffer using the initialized format."""
+        # ret = self._struct.unpack_from(buf, 0)
+        ret = self._struct.unpack_from(buf, 0)[0]
+        unused = buf[struct.calcsize(self.format):]
+
+        if self.decimal_prec:
+            decimal.getcontext().prec = self.decimal_prec
+        else:
+            decimal.getcontext().prec = 26
+
+        ret_decimal = Decimal(ret) / Decimal(2 ** self.precision)
+        return (ret_decimal, unused)
 
     def make(self):
-        pass
+        return self._struct

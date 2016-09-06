@@ -7,6 +7,7 @@ import unittest
 from decimal import Decimal
 
 from namedstruct.elementfixedpoint import ElementFixedPoint, get_fixed_bits
+from namedstruct.message import Message
 from namedstruct.modes import Mode
 
 
@@ -104,6 +105,7 @@ class TestElementFixedPoint(unittest.TestCase):
             ({'a': '13.5'}, '13.5'),
             ({'a': '13.500'}, '13.500'),
             ({'a': Decimal('13.500')}, '13.500'),
+            ({'a': 1.1 + 2.2}, '3.3'),
         ]
 
         multiplier = 2 ** precision
@@ -114,3 +116,33 @@ class TestElementFixedPoint(unittest.TestCase):
                 out_val = Decimal(out_val)
 
             self.assertEqual(ret, int((out_val * multiplier)).to_bytes(4, 'big'))
+
+    def test_valid_make(self):
+        """Test full packing."""
+        my_message = Message('my_msg', [
+            ('my_fixed', 'F', 'i', 8),
+            ('not_specified_fixed', 'F', 'i', 8),
+            ('other_fixed', 'F', 'i', 8, 3),
+            ('just_a_num', 'i'),
+            ('a_string', '32s'),
+            ('this_fixed', 'F', 'i', 5),
+        ], Mode.Big)
+
+        data = {
+            'my_fixed': 1.1 + 2.2,
+            'other_fixed': Decimal('1.1') + Decimal('2.2'),
+            'not_specified_fixed': Decimal('1.1') + Decimal('2.2'),
+            'just_a_num': 16,
+            'a_string': '=====================',
+            'this_fixed': '1.9375',
+        }
+
+        packed = my_message.pack(data)
+        unpacked = my_message.unpack(packed)
+
+        assert unpacked.a_string == data['a_string']
+        assert unpacked.just_a_num == data['just_a_num']
+        assert unpacked.other_fixed == Decimal('3.3')
+        assert unpacked.my_fixed == Decimal('3.296875')
+        assert unpacked.not_specified_fixed == Decimal('3.296875')
+        assert unpacked.this_fixed == Decimal(data['this_fixed'])
