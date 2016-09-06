@@ -74,17 +74,16 @@ class ElementFixedPoint(Element):
 
     Uses the built in Decimal class
 
-    Example Usage:
+    Example Usage::
 
-    >>> example_precision = 8
-    >>> example_struct = namedstruct.Message('example', [
-            ('my_fixed_point', 'F', 'I', example_precision)
-        ])
+        from namedstruct.message import Message
+        example_precision = 8
+        example_struct = namedstruct.Message('example', [('my_fixed_point', 'F', 'I', example_precision)])
 
-    >>> my_data = {
+        my_data = {
             'my_fixed_point': '120.0'
         }
-    >>> packed_struct = example_struct.make(my_data)
+        packed_struct = example_struct.make(my_data)
 
     """
 
