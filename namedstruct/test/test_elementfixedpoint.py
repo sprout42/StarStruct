@@ -39,6 +39,9 @@ class TestElementFixedPointHelpers(unittest.TestCase):
         with self.assertRaises(ValueError):
             get_fixed_bits(Decimal('20'), 'h', 4)
 
+        with self.assertRaises(ValueError):
+            get_fixed_bits(42, 'i', 12)
+
     def test_valid_higher_bits(self):
         """Just make sure these all don't fail"""
         get_fixed_bits(255, 'I', 8)

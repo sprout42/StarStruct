@@ -125,10 +125,7 @@ class ElementFixedPoint(Element):
 
     def pack(self, msg):
         """Pack the provided values into the specified buffer."""
-        try:
-            packing_decimal = Decimal(msg[self.name])
-        except:
-            packing_decimal = Decimal(str(msg[self.name]))
+        packing_decimal = Decimal(msg[self.name])
 
         # integer = int(self.decimal // 1)
         # top_bits = integer.to_bytes(int((self.bits - self.precision) / 8), self._mode.to_byteorder())
@@ -158,5 +155,6 @@ class ElementFixedPoint(Element):
         ret_decimal = Decimal(ret) / Decimal(2 ** self.precision)
         return (ret_decimal, unused)
 
-    def make(self):
-        return self._struct
+    def make(self, msg):
+        """Return bytes of the expected format"""
+        return self._struct.pack(msg[self.name])
