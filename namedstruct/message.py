@@ -144,12 +144,18 @@ class Message(object):
                     err = 'length field {} reference {} mismatch'
                     raise TypeError(err.format(elem.name, elem.ref))
             elif isinstance(elem, namedstruct.elementvariable.ElementVariable):
-                if not isinstance(self._elements[elem.ref], namedstruct.elementlength.ElementLength):
-                    err = 'variable field {} reference {} invalid type'
-                    raise TypeError(err.format(elem.name, elem.ref))
-                elif not self._elements[elem.ref].ref == elem.name:
-                    err = 'variable field {} reference {} mismatch'
-                    raise TypeError(err.format(elem.name, elem.ref))
+                if elem.variable_repeat:
+                    if not isinstance(self._elements[elem.ref], namedstruct.elementlength.ElementLength):
+                        err = 'variable field {} reference {} invalid type'
+                        raise TypeError(err.format(elem.name, elem.ref))
+                    elif not self._elements[elem.ref].ref == elem.name:
+                        err = 'variable field {} reference {} mismatch'
+                        raise TypeError(err.format(elem.name, elem.ref))
+                else:
+                    if not isinstance(elem.ref, int):
+                        err = 'fixed repetition field {} reference {} not an integer'
+                        raise TypeError(err.format(elem.name, elem.ref))
+
             elif isinstance(elem, namedstruct.elementdiscriminated.ElementDiscriminated):
                 if not isinstance(self._elements[elem.ref], namedstruct.elementenum.ElementEnum):
                     err = 'discriminated field {} reference {} invalid type'

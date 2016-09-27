@@ -43,9 +43,9 @@ class Element(object):
          4. Variable: a variable length element that accommodates 0 or more of
             another NamedStruct.message.  The format field should be a valid
             NamedStruct.message, the optional 3rd element must be provided and
-            should be the name of a valid Length element.  The validity of the
-            referenced element must be checked after the creation of the entire
-            message with the Message.validate() function.
+            should be the name of a valid Length element or an int.  The validity
+            of the referenced element must be checked after the creation of the
+            entire message with the Message.validate() function.
 
          5. Discriminated: a message element that can have multiple formats
             such as a C union.  The format field should be a dictionary where
