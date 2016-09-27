@@ -1,6 +1,7 @@
 """NamedStruct class."""
 
 import collections
+import struct
 import namedstruct.modes
 from namedstruct.element import Element
 
@@ -215,3 +216,22 @@ class Message(object):
             val = self._elements[field].make(kwargs)
             msg = msg._replace(**dict([(field, val)]))
         return msg
+
+    def __len__(self):
+        if self._elements == {}:
+            return 0
+
+        size = 0
+        for val in self._elements.values():
+            if isinstance(val.format, (bytes, str)):
+                size += struct.calcsize(val.format)
+            elif isinstance(val.format, (dict, )):
+                lengths = {len(item) for item in val.format.values()}
+                if len(lengths) > 1:
+                    raise AttributeError('Unable to calculate size due to differing size sub items')
+
+                size += sum(lengths)
+            else:
+                size += len(val.format)
+
+        return size
