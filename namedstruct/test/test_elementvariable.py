@@ -2,10 +2,11 @@
 
 """Tests for the namedstruct class"""
 
+import enum
+import pytest
 import struct
 import unittest
 
-import enum
 from namedstruct.message import Message
 # from namedstruct.modes import Mode
 
@@ -122,3 +123,196 @@ class TestNamedstruct(unittest.TestCase):
             (struct.pack('B', 1) + struct.pack('H', 26)) + \
             (struct.pack('B', 5) + struct.pack('H', 10)) + \
             (struct.pack('B', 0) + struct.pack('H', 0)) * 2
+
+    def test_byte_length_no_data(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+
+        ])
+        test_data_no_data = {
+            'length_in_objects': 0,
+            'vardata': [],
+            'length_in_bytes': 0,
+            'bytesdata': [],
+        }
+
+        made = TestStruct.make(test_data_no_data)
+        assert made.length_in_objects == 0
+        assert made.vardata == []
+        assert made.length_in_bytes == 0
+        assert made.bytesdata == []
+
+        packed = TestStruct.pack(test_data_no_data)
+        assert packed == \
+            struct.pack('H', 0) + \
+            struct.pack('H', 0)
+
+    def test_byte_length_some_data(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+
+        ])
+        test_data_no_data = {
+            'length_in_objects': 1,
+            'vardata': [
+                {'x': 255, 'y': 127},
+            ],
+            'length_in_bytes': 2,
+            'bytesdata': [
+                {'x': 254, 'y': 126},
+            ],
+        }
+
+        made = TestStruct.make(test_data_no_data)
+        assert made.length_in_objects == 1
+        assert made.vardata == [
+            self.VarTest.make(
+                {'x': 255, 'y': 127}
+            )]
+        assert made.length_in_bytes == 2
+        assert made.bytesdata == [
+            self.VarTest.make(
+                {'x': 254, 'y': 126}
+            )]
+
+        packed = TestStruct.pack(test_data_no_data)
+        assert packed == \
+            struct.pack('H', 1) + \
+            struct.pack('BB', 255, 127) + \
+            struct.pack('H', 2) + \
+            struct.pack('BB', 254, 126)
+
+    def test_byte_length_more_data(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+
+        ])
+
+        test_data_no_data = {
+            'length_in_objects': 1,
+            'vardata': [
+                {'x': 255, 'y': 127},
+            ],
+            'length_in_bytes': 10,
+            'bytesdata': [
+                {'x': 254, 'y': 126},
+                {'x': 25, 'y': 16},
+                {'x': 24, 'y': 26},
+                {'x': 54, 'y': 17},
+                {'x': 25, 'y': 12},
+            ],
+        }
+
+        made = TestStruct.make(test_data_no_data)
+        assert made.length_in_objects == 1
+        assert made.vardata == [
+            self.VarTest.make(
+                {'x': 255, 'y': 127}
+            )]
+        assert made.length_in_bytes == 10
+        assert made.bytesdata == [
+            self.VarTest.make(
+                {'x': 254, 'y': 126}
+            ),
+            self.VarTest.make(
+                {'x': 25, 'y': 16},
+            ),
+            self.VarTest.make(
+                {'x': 24, 'y': 26},
+            ),
+            self.VarTest.make(
+                {'x': 54, 'y': 17},
+            ),
+            self.VarTest.make(
+                {'x': 25, 'y': 12},
+            ),
+            ]
+
+        packed = TestStruct.pack(test_data_no_data)
+        assert packed == \
+            struct.pack('H', 1) + \
+            struct.pack('BB', 255, 127) + \
+            struct.pack('H', 10) + \
+            struct.pack('BB', 254, 126) + \
+            struct.pack('BB', 25, 16) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 54, 17) + \
+            struct.pack('BB', 25, 12)
+
+    def test_unpacking_of_correct_size(self):
+        packed_element = \
+            struct.pack('H', 1) + \
+            struct.pack('BB', 255, 127) + \
+            struct.pack('H', 10) + \
+            struct.pack('BB', 254, 126) + \
+            struct.pack('BB', 25, 16) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 54, 17) + \
+            struct.pack('BB', 25, 12)
+
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+        ])
+
+        unpacked = TestStruct.unpack(packed_element)
+
+        assert unpacked.length_in_objects == 1
+        assert unpacked.length_in_bytes == 10
+
+    def test_unpacking_of_too_little_bytes(self):
+        # Only pack four elements, instead of the five
+        packed_element = \
+            struct.pack('H', 1) + \
+            struct.pack('BB', 255, 127) + \
+            struct.pack('H', 10) + \
+            struct.pack('BB', 254, 126) + \
+            struct.pack('BB', 25, 16) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 54, 17)
+
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+        ])
+
+        with pytest.raises(struct.error):
+            unpacked = TestStruct.unpack(packed_element)
+
+    def test_unpacking_of_too_many_bytes(self):
+        packed_element = \
+            struct.pack('H', 1) + \
+            struct.pack('BB', 255, 127) + \
+            struct.pack('H', 10) + \
+            struct.pack('BB', 254, 126) + \
+            struct.pack('BB', 25, 16) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 24, 26) + \
+            struct.pack('BB', 54, 17)
+
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            (b'length_in_bytes', 'H', 'bytesdata'),
+            ('bytesdata', self.VarTest, b'length_in_bytes'),
+        ])
+
+        with pytest.raises(ValueError):
+            unpacked = TestStruct.unpack(packed_element)
