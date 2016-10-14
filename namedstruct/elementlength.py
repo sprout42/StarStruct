@@ -17,7 +17,13 @@ class ElementLength(Element):
 
         # All of the type checks have already been performed by the class
         # factory
-        self.name = field[0]
+        if isinstance(field[0], str):
+            self.name = field[0]
+            self.object_length = True
+        elif isinstance(field[0], bytes):
+            self.name = field[0].decode('utf-8')
+            self.object_length = False
+
         self.ref = field[2]
 
         # Validate that the format specifiers are valid struct formats, this
@@ -54,9 +60,14 @@ class ElementLength(Element):
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
-        # When packing a length element, use the length of the referenced
-        # element not the value of the current element in the supplied object.
-        return self._struct.pack(len(msg[self.ref]))
+        if self.object_length:
+            # When packing a length element, use the length of the referenced
+            # element not the value of the current element in the supplied object.
+            return self._struct.pack(len(msg[self.ref]))
+        else:
+            # When packing something via byte length,
+            # we use our self to determine the length
+            return self._struct.pack(msg[self.name])
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
@@ -66,4 +77,7 @@ class ElementLength(Element):
 
     def make(self, msg):
         """Return the length of the referenced array"""
-        return len(msg[self.ref])
+        if self.object_length:
+            return len(msg[self.ref])
+        else:
+            return msg[self.name]

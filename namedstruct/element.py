@@ -65,9 +65,9 @@ class Element(object):
         if not isinstance(field, tuple):
             raise TypeError('invalid element: {}'.format(field))
 
-        # The name of the element must be a non-null string provided in as the
-        # first part of the field tuple
-        if not field[0] or not isinstance(field[0], str):
+        # The name of the element must be a non-null string or bytes 
+        # provided in as the first part of the field tuple
+        if not field[0] or not isinstance(field[0], (str, bytes)):
             raise TypeError('invalid name: {}'.format(field[0]))
 
         for elem in cls.elementtypes:

@@ -67,7 +67,12 @@ class Message(object):
         self._elements = collections.OrderedDict()
         for field in fields:
             if field[0] not in self._elements:
-                self._elements[field[0]] = Element.factory(field, mode)
+                if isinstance(field[0], str):
+                    self._elements[field[0]] = Element.factory(field, mode)
+                elif isinstance(field[0], bytes):
+                    self._elements[field[0].decode('utf-8')] = Element.factory(field, mode)
+                else:
+                    raise NotImplementedError
             else:
                 raise TypeError('duplicate field {} in {}'.format(field[0], fields))
 
@@ -145,12 +150,18 @@ class Message(object):
                     raise TypeError(err.format(elem.name, elem.ref))
             elif isinstance(elem, namedstruct.elementvariable.ElementVariable):
                 if elem.variable_repeat:
-                    if not isinstance(self._elements[elem.ref], namedstruct.elementlength.ElementLength):
-                        err = 'variable field {} reference {} invalid type'
-                        raise TypeError(err.format(elem.name, elem.ref))
-                    elif not self._elements[elem.ref].ref == elem.name:
-                        err = 'variable field {} reference {} mismatch'
-                        raise TypeError(err.format(elem.name, elem.ref))
+                    # Handle object length, not byte length
+                    if elem.object_length:
+                        if not isinstance(self._elements[elem.ref], namedstruct.elementlength.ElementLength):
+                            err = 'variable field {} reference {} invalid type'
+                            raise TypeError(err.format(elem.name, elem.ref))
+                        elif not self._elements[elem.ref].ref == elem.name:
+                            err = 'variable field {} reference {} mismatch'
+                            raise TypeError(err.format(elem.name, elem.ref))
+                    # Handle byte length, not object length
+                    else:
+                        # TODO: Validate the object
+                        pass
                 else:
                     if not isinstance(elem.ref, int):
                         err = 'fixed repetition field {} reference {} not an integer'
