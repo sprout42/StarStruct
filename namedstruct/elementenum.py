@@ -4,10 +4,11 @@ import struct
 import re
 import enum
 
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
+@register
 class ElementEnum(Element):
     """
     The enumeration NamedStruct element class.
@@ -43,10 +44,23 @@ class ElementEnum(Element):
         The basics have already been validated by the Element factory class,
         validate that the struct format is a valid numeric value.
         """
-        return len(field) == 3 \
-            and isinstance(field[1], str) \
-            and re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) \
-            and issubclass(field[2], enum.Enum)
+        try:
+            is_valid = (len(field) == 3 and
+                        isinstance(field[1], str) and
+                        re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) and
+                        issubclass(field[2], enum.Enum))
+        except TypeError:
+            is_valid = False
+        return is_valid
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        The "enum" element requires no further validation.
+        """
+        pass
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""

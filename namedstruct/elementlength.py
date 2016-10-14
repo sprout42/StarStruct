@@ -3,10 +3,11 @@
 import struct
 import re
 
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
+@register
 class ElementLength(Element):
     """
     The length NamedStruct element class.
@@ -52,6 +53,23 @@ class ElementLength(Element):
             and isinstance(field[1], str) \
             and re.match(r'[BHILQ]', field[1]) \
             and isinstance(field[2], str) and len(field[2])
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        All elements that are Variable must reference valid Length elements.
+        """
+        # TODO: Allow referencing multiple elements for byte lengths?
+
+        from namedstruct.elementvariable import ElementVariable
+        if not isinstance(msg[self.ref], ElementVariable):
+            err = 'length field {} reference {} invalid type'
+            raise TypeError(err.format(self.name, self.ref))
+        elif not msg[self.ref].ref == self.name:
+            err = 'length field {} reference {} mismatch'
+            raise TypeError(err.format(self.name, self.ref))
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""

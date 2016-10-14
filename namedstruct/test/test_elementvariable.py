@@ -235,7 +235,7 @@ class TestNamedstruct(unittest.TestCase):
             self.VarTest.make(
                 {'x': 25, 'y': 12},
             ),
-            ]
+        ]
 
         packed = TestStruct.pack(test_data_no_data)
         assert packed == \
@@ -268,6 +268,7 @@ class TestNamedstruct(unittest.TestCase):
 
         unpacked = TestStruct.unpack(packed_element)
 
+        assert unpacked
         assert unpacked.length_in_objects == 1
         assert unpacked.length_in_bytes == 10
 
@@ -291,6 +292,7 @@ class TestNamedstruct(unittest.TestCase):
 
         with pytest.raises(struct.error):
             unpacked = TestStruct.unpack(packed_element)
+            assert unpacked
 
     def test_unpacking_of_too_many_bytes(self):
         packed_element = \
@@ -316,3 +318,4 @@ class TestNamedstruct(unittest.TestCase):
 
         with pytest.raises(ValueError):
             unpacked = TestStruct.unpack(packed_element)
+            assert unpacked

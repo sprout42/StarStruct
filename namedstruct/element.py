@@ -3,6 +3,12 @@
 import namedstruct
 
 
+def register(cls):
+    """ A handy decorator to register a class as an element """
+    Element.register(cls)
+    return cls
+
+
 class Element(object):
     """
     A class factory that determines the type of the field passed in, and
@@ -79,6 +85,10 @@ class Element(object):
 
     @staticmethod
     def valid(field):
+        """Require element objects to implement this function."""
+        raise NotImplementedError
+
+    def validate(self, msg):
         """Require element objects to implement this function."""
         raise NotImplementedError
 

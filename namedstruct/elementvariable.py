@@ -4,10 +4,11 @@
 import struct
 
 import namedstruct
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
+@register
 class ElementVariable(Element):
     """
     The variable NamedStruct element class.
@@ -110,6 +111,32 @@ class ElementVariable(Element):
         return len(field) == 3 \
             and isinstance(field[1], namedstruct.message.Message) \
             and isinstance(field[2], (str, int, bytes))
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        All elements that are Variable must reference valid Length elements.
+        """
+        from namedstruct.elementlength import ElementLength
+        if self.variable_repeat:
+            # Handle object length, not byte length
+            if self.object_length:
+                if not isinstance(msg[self.ref], ElementLength):
+                    err = 'variable field {} reference {} invalid type'
+                    raise TypeError(err.format(self.name, self.ref))
+                elif not msg[self.ref].ref == self.name:
+                    err = 'variable field {} reference {} mismatch'
+                    raise TypeError(err.format(self.name, self.ref))
+            # Handle byte length, not object length
+            else:
+                # TODO: Validate the object
+                pass
+        else:
+            if not isinstance(self.ref, int):
+                err = 'fixed repetition field {} reference {} not an integer'
+                raise TypeError(err.format(self.name, self.ref))
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""

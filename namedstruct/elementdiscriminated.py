@@ -1,10 +1,11 @@
 """NamedStruct element class."""
 
 import namedstruct
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
+@register
 class ElementDiscriminated(Element):
     """
     The discriminated NamedStruct element class.
@@ -41,6 +42,33 @@ class ElementDiscriminated(Element):
             and isinstance(field[2], str) \
             and all(isinstance(val, (namedstruct.message.Message, type(None)))
                     for val in field[1].values())
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        All Discriminated elements must reference valid Enum elements, and the
+        keys of the discriminated format must be valid instances of the
+        referenced Enum class.
+        """
+        from namedstruct.elementenum import ElementEnum
+        if not isinstance(msg[self.ref], ElementEnum):
+            err = 'discriminated field {} reference {} invalid type'
+            raise TypeError(err.format(self.name, self.ref))
+        elif not all(isinstance(key, msg[self.ref].ref)
+                     for key in self.format.keys()):
+            err = 'discriminated field {} reference {} mismatch'
+            raise TypeError(err.format(self.name, self.ref))
+        else:
+            for key in self.format.keys():
+                try:
+                    ref_cls = msg[self.ref].ref
+                    assert ref_cls(key)
+                except:
+                    err = 'discriminated field {} key {} not a valid {}'
+                    msg = err.format(self.name, key, self.ref)
+                    raise TypeError(msg)
 
     def update(self, mode=None, alignment=None):
         """change the mode of each message format"""

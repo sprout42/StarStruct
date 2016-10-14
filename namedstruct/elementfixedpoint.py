@@ -7,7 +7,7 @@ import struct
 import decimal
 from decimal import Decimal
 
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
@@ -72,6 +72,7 @@ def get_fixed_bits(num, pack_format, precision):
     return struct.pack(pack_format, num_shifted)
 
 
+@register
 class ElementFixedPoint(Element):
     """
     A NamedStruct element class for fixed point number fields.
@@ -129,6 +130,15 @@ class ElementFixedPoint(Element):
             and re.match(r'\d*F', field[1]) \
             and isinstance(field[2], str) \
             and isinstance(field[3], (int, float, Decimal))
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        The "fixedpoint" element requires no further validation.
+        """
+        pass
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""

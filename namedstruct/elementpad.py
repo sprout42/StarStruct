@@ -3,10 +3,11 @@
 import struct
 import re
 
-from namedstruct.element import Element
+from namedstruct.element import register, Element
 from namedstruct.modes import Mode
 
 
+@register
 class ElementPad(Element):
     """
     The basic NamedStruct element class.
@@ -55,6 +56,15 @@ class ElementPad(Element):
         return len(field) == 2 \
             and isinstance(field[1], str) \
             and re.match(r'\d*x', field[1])
+
+    def validate(self, msg):
+        """
+        Ensure that the supplied message contains the required information for
+        this element object to operate.
+
+        The "padding" element requires no further validation.
+        """
+        pass
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""
