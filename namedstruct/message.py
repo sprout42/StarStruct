@@ -87,11 +87,18 @@ class Message(object):
         # Then check any element values that may be another message type to
         # ensure that the sub-elements are valid types.
         for key in self._elements.keys():
-            if isinstance(self._elements[key], namedstruct.elementvariable.ElementVariable):
+            if hasattr(self._elements[key].format, 'is_unpacked'):
+                # If the format for an element is Message object (that has the
+                # is_unpacked() function defined), call the is_unpacked()
+                # function.
                 msg = self._elements[key].format
                 if not msg.is_unpacked(getattr(other, key)):
                     return False
-            elif isinstance(self._elements[key], namedstruct.elementdiscriminated.ElementDiscriminated):
+            if hasattr(self._elements[key].format, 'keys'):
+                # If the format for an element is a dictionary, attempt to
+                # extract the correct item with the assumption that the ref
+                # attribute identifies the discriminator
+
                 # Select the correct message object based on the value of the
                 # referenced item
                 ref_val = getattr(other, self._elements[key].ref)
