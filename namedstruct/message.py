@@ -34,7 +34,7 @@ class Message(object):
     """An object much like NamedTuple, but with additional formatting."""
 
     # pylint: disable=too-many-branches
-    def __init__(self, name, fields, mode=namedstruct.modes.Mode.Native):
+    def __init__(self, name, fields, mode=namedstruct.modes.Mode.Native, alignment=1):
         """
         Initialize a NamedStruct object.
 
@@ -50,6 +50,8 @@ class Message(object):
             raise TypeError('invalid name: {}'.format(name))
 
         self.name = name
+        self.mode = mode
+        self.alignment = alignment
 
         # The structure definition must be a list of
         #   ('name', 'format', <optional>)
@@ -68,9 +70,9 @@ class Message(object):
         for field in fields:
             if field[0] not in self._elements:
                 if isinstance(field[0], str):
-                    self._elements[field[0]] = Element.factory(field, mode)
+                    self._elements[field[0]] = Element.factory(field, mode, alignment)
                 elif isinstance(field[0], bytes):
-                    self._elements[field[0].decode('utf-8')] = Element.factory(field, mode)
+                    self._elements[field[0].decode('utf-8')] = Element.factory(field, mode, alignment)
                 else:
                     raise NotImplementedError
             else:
@@ -84,14 +86,14 @@ class Message(object):
         named_fields = [elem.name for elem in self._elements.values() if elem.name]
         self._tuple = collections.namedtuple(self.name, named_fields)
 
-    def changemode(self, mode):
+    def update(self, mode=None, alignment=None):
         """ Change the mode of a message. """
-        if not isinstance(mode, namedstruct.modes.Mode):
+        if mode and not isinstance(mode, namedstruct.modes.Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # Change the mode for all elements
         for key in self._elements.keys():
-            self._elements[key].changemode(mode)
+            self._elements[key].update(mode, alignment)
 
     def is_unpacked(self, other):
         """

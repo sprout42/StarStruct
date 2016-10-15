@@ -1,9 +1,11 @@
 """NamedStruct element class."""
+# pylint: disable=line-too-long
 
 import struct
 
 import namedstruct
 from namedstruct.element import Element
+from namedstruct.modes import Mode
 
 
 class ElementVariable(Element):
@@ -44,7 +46,7 @@ class ElementVariable(Element):
 
     3) ------------------------------------------------------------------------
     Fixed length, in terms of namedstruct elements
-         
+
     RepeatedMessage = Message('Repeated', [('x', 'B'), ('y', 'H')])
 
     message_struct = [
@@ -63,8 +65,7 @@ class ElementVariable(Element):
 
     """
 
-    # pylint: disable=unused-argument
-    def __init__(self, field, mode):
+    def __init__(self, field, mode=Mode.Native, alignment=1):
         """Initialize a NamedStruct element object."""
 
         # All of the type checks have already been performed by the class
@@ -95,7 +96,7 @@ class ElementVariable(Element):
             # TODO: If we add #4, then we would have to have a check here
             self.object_length = True
 
-        self.changemode(mode)
+        self.update(mode, alignment)
 
     @staticmethod
     def valid(field):
@@ -110,10 +111,11 @@ class ElementVariable(Element):
             and isinstance(field[1], namedstruct.message.Message) \
             and isinstance(field[2], (str, int, bytes))
 
-    def changemode(self, mode):
-        """change the mode of the message format"""
+    def update(self, mode=None, alignment=None):
+        """change the mode of the struct format"""
         self._mode = mode
-        self.format.changemode(mode)
+        self._alignment = alignment
+        self.format.update(mode, alignment)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
@@ -141,6 +143,9 @@ class ElementVariable(Element):
             ret = [self.format.pack(msg[self.name][index]) if index < len(msg[self.name]) else empty_byte * len(self.format)
                    for index in range(self.ref)]
 
+        # There is no need to make sure that the packed data is properly
+        # aligned, because that should already be done by the individual
+        # messages that have been packed.
         return b''.join(ret)
 
     def unpack(self, msg, buf):
@@ -155,11 +160,14 @@ class ElementVariable(Element):
                 ret.append(val)
         else:
             length = 0
-            while length < getattr(msg,self.ref):
+            while length < getattr(msg, self.ref):
                 (val, unused) = self.format.unpack_partial(unused)
                 length += len(val)
                 ret.append(val)
 
+        # There is no need to make sure that the unpacked data consumes a
+        # properly aligned number of bytes because that should already be done
+        # by the individual messages that have been unpacked.
         return (ret, unused)
 
     def make(self, msg):

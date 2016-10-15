@@ -1,3 +1,5 @@
+"""NamedStruct fixedpoint element class."""
+# pylint: disable=line-too-long
 
 import re
 import struct
@@ -9,7 +11,7 @@ from namedstruct.element import Element
 from namedstruct.modes import Mode
 
 
-bits_format = {
+BITS_FORMAT = {
     ('c', 'b', 'B'): 1,
     ('h', 'H'): 2,
     ('i', 'I', 'l', 'L'): 4,
@@ -18,22 +20,24 @@ bits_format = {
 
 
 def get_bits_length(pack_format):
+    """
+    Helper function to return the number of bits for the format
+    """
     if pack_format[0] in ['@', '=', '<', '>', '+']:
         pack_format = pack_format[1:]
 
     bits = -1
-    for fmt in bits_format:
+    for fmt in BITS_FORMAT:
         match_str = r'|'.join(fmt)
         # match_str = r'(@|=|<|>|+)' + match_str
         # match_str = r'*' + match_str + r'*'
 
         if re.match(match_str, pack_format):
-            bits = bits_format[fmt] * 4
+            bits = BITS_FORMAT[fmt] * 4
 
     if bits == -1:
-        raise ValueError('Pack format {0} was not a valid fixed point specifier'.format(
-            pack_format)
-        )
+        err = 'Pack format {0} was not a valid fixed point specifier'
+        raise ValueError(err.format(pack_format))
 
     return bits
 
@@ -51,10 +55,7 @@ def get_fixed_point(num, pack_format, precision):
     bits = get_bits_length(pack_format)
 
     if bits < precision:
-        raise ValueError('Specified a format {1} that was too small for the given precision of {0}'.format(
-            pack_format,
-            precision
-        ))
+        raise ValueError('Format {1} too small for the given precision of {0}'.format(pack_format, precision))
 
     if num >= 2 ** (bits - precision):
         raise ValueError('num: {0} must fit in the specified number of available bits {1}'.format(num, 8 * (bits - precision)))
@@ -64,6 +65,9 @@ def get_fixed_point(num, pack_format, precision):
 
 
 def get_fixed_bits(num, pack_format, precision):
+    """
+    Helper function to get the integer portion of a fixed point value
+    """
     num_shifted = get_fixed_point(num, pack_format, precision)
     return struct.pack(pack_format, num_shifted)
 
@@ -87,25 +91,28 @@ class ElementFixedPoint(Element):
 
     """
 
-    def __init__(self, field, mode=Mode.Native):
+    def __init__(self, field, mode=Mode.Native, alignment=1):
         """Initialize a NamedStruct element object."""
 
         # TODO: Add checks in the class factory?
         self.name = field[0]
-        self.pack_format = field[2]
-        self.precision = field[3]
+
+        # the ref attribute is required, but this element doesn't quite have
+        # one, instead use the ref field to hold the fixed point format
+        # attributes
+        self.ref = {}
+
+        self.ref['precision'] = field[3]
 
         if len(field) == 5:
-            self.decimal_prec = field[4]
+            self.ref['decimal_prec'] = field[4]
         else:
-            self.decimal_prec = False
-
-        # TODO: Do I need a ref here?
-        self.ref = None
+            self.ref['decimal_prec'] = None
 
         self._mode = mode
+        self._alignment = alignment
 
-        self.format = mode.value + self.pack_format
+        self.format = mode.value + field[2]
         self._struct = struct.Struct(self.format)
 
     @staticmethod
@@ -123,6 +130,17 @@ class ElementFixedPoint(Element):
             and isinstance(field[2], str) \
             and isinstance(field[3], (int, float, Decimal))
 
+    def update(self, mode=None, alignment=None):
+        """change the mode of the struct format"""
+        if alignment:
+            self._alignment = alignment
+
+        if mode:
+            self._mode = mode
+            self.format = mode.value + self.format[1:]
+            # recreate the struct with the new format
+            self._struct = struct.Struct(self.format)
+
     def pack(self, msg):
         """Pack the provided values into the specified buffer."""
         packing_decimal = Decimal(msg[self.name])
@@ -138,23 +156,34 @@ class ElementFixedPoint(Element):
         # print('bot_bits:', bot_bits)
         # print('all_bits:', top_bits + bot_bits)
         # self._struct.pack(top_bits + bot_bits)
-        fixed_point = get_fixed_point(packing_decimal, self.format, self.precision)
-        return self._struct.pack(fixed_point)
+        fixed_point = get_fixed_point(packing_decimal, self.format, self.ref['precision'])
+        data = self._struct.pack(fixed_point)
+
+        # If the data does not meet the alignment, add some padding
+        missing_bytes = len(data) % self._alignment
+        if missing_bytes:
+            data += b'\x00' * missing_bytes
+        return data
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         # ret = self._struct.unpack_from(buf, 0)
         ret = self._struct.unpack_from(buf, 0)[0]
-        unused = buf[struct.calcsize(self.format):]
 
-        if self.decimal_prec:
-            decimal.getcontext().prec = self.decimal_prec
+        # Remember to remove any alignment-based padding
+        extra_bytes = self._alignment - 1 - (struct.calcsize(self.format) %
+                                             self._alignment)
+        unused = buf[struct.calcsize(self.format) + extra_bytes:]
+
+        if self.ref['decimal_prec']:
+            decimal.getcontext().prec = self.ref['decimal_prec']
         else:
             decimal.getcontext().prec = 26
 
-        ret_decimal = Decimal(ret) / Decimal(2 ** self.precision)
+        ret_decimal = Decimal(ret) / Decimal(2 ** self.ref['precision'])
         return (ret_decimal, unused)
 
     def make(self, msg):
         """Return bytes of the expected format"""
-        return self._struct.pack(msg[self.name])
+        # return self._struct.pack(msg[self.name])
+        return msg[self.name]

@@ -16,7 +16,7 @@ class Element(object):
         cls.elementtypes.append(element)
 
     @classmethod
-    def factory(cls, field, mode=namedstruct.modes.Mode.Native):
+    def factory(cls, field, mode=namedstruct.modes.Mode.Native, alignment=1):
         """
         Initialize a NamedStruct element object based on the type of element
         parameters provided.
@@ -43,9 +43,9 @@ class Element(object):
          4. Variable: a variable length element that accommodates 0 or more of
             another NamedStruct.message.  The format field should be a valid
             NamedStruct.message, the optional 3rd element must be provided and
-            should be the name of a valid Length element or an int.  The validity
-            of the referenced element must be checked after the creation of the
-            entire message with the Message.validate() function.
+            should be the name of a valid Length element or an int.  The
+            validity of the referenced element must be checked after the
+            creation of the entire message with the Message.validate() function.
 
          5. Discriminated: a message element that can have multiple formats
             such as a C union.  The format field should be a dictionary where
@@ -65,14 +65,14 @@ class Element(object):
         if not isinstance(field, tuple):
             raise TypeError('invalid element: {}'.format(field))
 
-        # The name of the element must be a non-null string or bytes 
+        # The name of the element must be a non-null string or bytes
         # provided in as the first part of the field tuple
         if not field[0] or not isinstance(field[0], (str, bytes)):
             raise TypeError('invalid name: {}'.format(field[0]))
 
         for elem in cls.elementtypes:
             if elem.valid(field):
-                return elem(field, mode)
+                return elem(field, mode, alignment)
 
         # If the function made it this far, the field specification is not valid
         raise TypeError('invalid field: {}'.format(field))
@@ -82,7 +82,7 @@ class Element(object):
         """Require element objects to implement this function."""
         raise NotImplementedError
 
-    def changemode(self, mode):
+    def update(self, mode, alignment):
         """Require element objects to implement this function."""
         raise NotImplementedError
 

@@ -13,13 +13,16 @@ class ElementEnum(Element):
     The enumeration NamedStruct element class.
     """
 
-    def __init__(self, field, mode=Mode.Native):
+    def __init__(self, field, mode=Mode.Native, alignment=1):
         """Initialize a NamedStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory
         self.name = field[0]
         self.ref = field[2]
+
+        self._mode = mode
+        self._alignment = alignment
 
         # Validate that the format specifiers are valid struct formats, this
         # doesn't have to be done now because the format will be checked when
@@ -28,7 +31,6 @@ class ElementEnum(Element):
         # The easiest way to perform this check is to create a "Struct" class
         # instance, this will also increase the efficiency of all struct related
         # functions called.
-        self._mode = mode
         self.format = mode.value + field[1]
         self._struct = struct.Struct(self.format)
 
@@ -46,12 +48,16 @@ class ElementEnum(Element):
             and re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) \
             and issubclass(field[2], enum.Enum)
 
-    def changemode(self, mode):
+    def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""
-        self._mode = mode
-        self.format = mode.value + self.format[1:]
-        # recreate the struct with the new format
-        self._struct = struct.Struct(self.format)
+        if alignment:
+            self._alignment = alignment
+
+        if mode:
+            self._mode = mode
+            self.format = mode.value + self.format[1:]
+            # recreate the struct with the new format
+            self._struct = struct.Struct(self.format)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
@@ -59,12 +65,23 @@ class ElementEnum(Element):
         # ensure that the value provided is a valid value for the referenced
         # enum class.
         enum_val = self.ref(msg[self.name])
-        return self._struct.pack(enum_val.value)
+        data = self._struct.pack(enum_val.value)
+
+        # If the data does not meet the alignment, add some padding
+        missing_bytes = len(data) % self._alignment
+        if missing_bytes:
+            data += b'\x00' * missing_bytes
+        return data
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         ret = self._struct.unpack_from(buf, 0)
-        unused = buf[struct.calcsize(self.format):]
+
+        # Remember to remove any alignment-based padding
+        extra_bytes = self._alignment - 1 - (struct.calcsize(self.format) %
+                                             self._alignment)
+        unused = buf[struct.calcsize(self.format) + extra_bytes:]
+
         # Convert the returned value to the referenced Enum type
         return (self.ref(ret[0]), unused)
 
