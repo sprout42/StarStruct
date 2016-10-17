@@ -77,8 +77,16 @@ class Element(object):
             raise TypeError('invalid name: {}'.format(field[0]))
 
         for elem in cls.elementtypes:
-            if elem.valid(field):
+            elem_found = False
+            try:
+                if elem.valid(field):
+                    elem_found = True
+            except:
+                continue
+            
+            if elem_found:
                 return elem(field, mode, alignment)
+
 
         # If the function made it this far, the field specification is not valid
         raise TypeError('invalid field: {}'.format(field))
