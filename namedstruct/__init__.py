@@ -1,8 +1,8 @@
-"""Package for NamedStruct."""
+"""Package for StarStruct."""
 
 import sys
 
-__project__ = 'NamedStruct'
+__project__ = 'StarStruct'
 __version__ = '0.9.0'
 
 VERSION = __project__ + '-' + __version__
@@ -14,8 +14,8 @@ if not sys.version_info >= PYTHON_VERSION:  # pragma: no cover (manual test)
 
 try:
     # pylint: disable=wrong-import-position
-    from namedstruct.message import Message
-    from namedstruct.modes import Mode
+    from starstruct.message import Message
+    from starstruct.modes import Mode
 
     # silence F401 flake8 error
     assert Message

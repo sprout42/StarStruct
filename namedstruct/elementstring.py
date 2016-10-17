@@ -1,16 +1,16 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 
 import struct
 import re
 
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 @register
 class ElementString(Element):
     """
-    A NamedStruct element for strings, because standard string treatment of
+    A StarStruct element for strings, because standard string treatment of
     pack/unpack can be inconvenient.
 
     This element will encode and decode string type elements from and to forms
@@ -18,7 +18,7 @@ class ElementString(Element):
     """
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory

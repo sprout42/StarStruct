@@ -1,1 +1,1 @@
-"""Tests for the `namedstruct` package."""
+"""Tests for the `starstruct` package."""

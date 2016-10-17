@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-"""Setup script for NamedStruct."""
+"""Setup script for StarStruct."""
 
 import os
 import setuptools
 
-from namedstruct import __project__, __version__
+from starstruct import __project__, __version__
 
 if os.path.exists('README.rst'):
     README = open('README.rst').read()
@@ -18,8 +18,8 @@ setuptools.setup(
     name=__project__,
     version=__version__,
 
-    description="NamedStruct allows for easy binary stream pack/unpack",
-    url='https://github.com/sprout42/NamedStruct',
+    description="StarStruct allows for easy binary stream pack/unpack",
+    url='https://github.com/sprout42/StarStruct',
     author='Aaron Cornelius',
     author_email='a.aaron.cornelius@gmail.com',
 

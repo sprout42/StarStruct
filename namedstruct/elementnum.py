@@ -1,22 +1,22 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 
 import struct
 import re
 import enum
 
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 @register
 class ElementNum(Element):
     """
-    A NamedStruct element class for number fields.
+    A StarStruct element class for number fields.
     """
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory

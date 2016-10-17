@@ -5,7 +5,7 @@ import enum
 import struct
 import unittest
 
-from namedstruct.message import Message
+from starstruct.message import Message
 
 
 class MyEnum(enum.Enum):

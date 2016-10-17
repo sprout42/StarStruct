@@ -1,6 +1,6 @@
 # Project settings
-PROJECT := NamedStruct
-PACKAGE := namedstruct
+PROJECT := StarStruct
+PACKAGE := starstruct
 SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
 EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
 

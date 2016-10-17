@@ -1,21 +1,21 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 # pylint: disable=line-too-long
 
 import struct
 
-import namedstruct
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+import starstruct
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 @register
 class ElementVariable(Element):
     """
-    The variable NamedStruct element class.
+    The variable StarStruct element class.
     Can be used in multiple ways ways:
 
     1) ------------------------------------------------------------------------
-    Variable Lengths, in terms of namedstruct elements
+    Variable Lengths, in terms of starstruct elements
 
     NOTE: The length item is specified as a string, not as bytes
 
@@ -34,7 +34,7 @@ class ElementVariable(Element):
 
     NOTE: The length item is specified as bytes, not as a string
 
-    SomeMessage = namedstruct.Message(...)
+    SomeMessage = starstruct.Message(...)
 
     message_struct = [
         (b'length_in_bytes', 'B', 'vardata'),
@@ -46,7 +46,7 @@ class ElementVariable(Element):
     that the length of SomeMessge == 4).
 
     3) ------------------------------------------------------------------------
-    Fixed length, in terms of namedstruct elements
+    Fixed length, in terms of starstruct elements
 
     RepeatedMessage = Message('Repeated', [('x', 'B'), ('y', 'H')])
 
@@ -67,7 +67,7 @@ class ElementVariable(Element):
     """
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory
@@ -75,7 +75,7 @@ class ElementVariable(Element):
         self.ref = field[2]
 
         # Variable elements don't use the normal struct format, the format is
-        # a NamedStruct.Message object, but change the mode to match the
+        # a StarStruct.Message object, but change the mode to match the
         # current mode.
         self.format = field[1]
 
@@ -109,7 +109,7 @@ class ElementVariable(Element):
         validate that the struct format is a valid numeric value.
         """
         return len(field) == 3 \
-            and isinstance(field[1], namedstruct.message.Message) \
+            and isinstance(field[1], starstruct.message.Message) \
             and isinstance(field[2], (str, int, bytes))
 
     def validate(self, msg):
@@ -119,7 +119,7 @@ class ElementVariable(Element):
 
         All elements that are Variable must reference valid Length elements.
         """
-        from namedstruct.elementlength import ElementLength
+        from starstruct.elementlength import ElementLength
         if self.variable_repeat:
             # Handle object length, not byte length
             if self.object_length:

@@ -4,7 +4,7 @@
 
 import unittest
 
-from namedstruct.elementpad import ElementPad
+from starstruct.elementpad import ElementPad
 
 
 # pylint: disable=line-too-long,invalid-name

@@ -6,9 +6,9 @@ import unittest
 
 from decimal import Decimal
 
-from namedstruct.elementfixedpoint import ElementFixedPoint, get_fixed_bits
-from namedstruct.message import Message
-from namedstruct.modes import Mode
+from starstruct.elementfixedpoint import ElementFixedPoint, get_fixed_bits
+from starstruct.message import Message
+from starstruct.modes import Mode
 
 
 class TestElementFixedPointHelpers(unittest.TestCase):

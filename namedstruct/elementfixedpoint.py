@@ -1,4 +1,4 @@
-"""NamedStruct fixedpoint element class."""
+"""StarStruct fixedpoint element class."""
 # pylint: disable=line-too-long
 
 import re
@@ -7,8 +7,8 @@ import struct
 import decimal
 from decimal import Decimal
 
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 BITS_FORMAT = {
@@ -75,15 +75,15 @@ def get_fixed_bits(num, pack_format, precision):
 @register
 class ElementFixedPoint(Element):
     """
-    A NamedStruct element class for fixed point number fields.
+    A StarStruct element class for fixed point number fields.
 
     Uses the built in Decimal class
 
     Example Usage::
 
-        from namedstruct.message import Message
+        from starstruct.message import Message
         example_precision = 8
-        example_struct = namedstruct.Message('example', [('my_fixed_point', 'F', 'I', example_precision)])
+        example_struct = starstruct.Message('example', [('my_fixed_point', 'F', 'I', example_precision)])
 
         my_data = {
             'my_fixed_point': '120.0'
@@ -93,7 +93,7 @@ class ElementFixedPoint(Element):
     """
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # TODO: Add checks in the class factory?
         self.name = field[0]

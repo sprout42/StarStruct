@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-"""Tests for the namedstruct class"""
+"""Tests for the starstruct class"""
 
 import unittest
 
 import enum
-from namedstruct.message import Message
-from namedstruct.modes import Mode
+from starstruct.message import Message
+from starstruct.modes import Mode
 
 
 class SimpleEnum(enum.Enum):
@@ -18,7 +18,7 @@ class SimpleEnum(enum.Enum):
 
 # pylint: disable=line-too-long,invalid-name
 class TestNamedstruct(unittest.TestCase):
-    """NamedStruct module tests"""
+    """StarStruct module tests"""
 
     teststruct = [
         ('a', 'b'),                            # signed byte: -128, 127

@@ -1,6 +1,6 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 
-import namedstruct
+import starstruct
 
 
 def register(cls):
@@ -22,9 +22,9 @@ class Element(object):
         cls.elementtypes.append(element)
 
     @classmethod
-    def factory(cls, field, mode=namedstruct.modes.Mode.Native, alignment=1):
+    def factory(cls, field, mode=starstruct.modes.Mode.Native, alignment=1):
         """
-        Initialize a NamedStruct element object based on the type of element
+        Initialize a StarStruct element object based on the type of element
         parameters provided.
 
         The field must be a tuple of the following form:
@@ -47,8 +47,8 @@ class Element(object):
             Variable element.
 
          4. Variable: a variable length element that accommodates 0 or more of
-            another NamedStruct.message.  The format field should be a valid
-            NamedStruct.message, the optional 3rd element must be provided and
+            another StarStruct.message.  The format field should be a valid
+            StarStruct.message, the optional 3rd element must be provided and
             should be the name of a valid Length element or an int.  The
             validity of the referenced element must be checked after the
             creation of the entire message with the Message.validate() function.
@@ -56,14 +56,14 @@ class Element(object):
          5. Discriminated: a message element that can have multiple formats
             such as a C union.  The format field should be a dictionary where
             the keys represent values of a referenced enumeration field, and
-            the value for each entry is a valid NamedStruct.message, or None.
+            the value for each entry is a valid StarStruct.message, or None.
             The optional 3rd element must be provided and should be the name of
             a valid Enum element.  The validity of the referenced element must
             be checked after the creation of the entire message with the
             Message.validate() function.
         """
 
-        if not isinstance(mode, namedstruct.modes.Mode):
+        if not isinstance(mode, starstruct.modes.Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # The field parameter is a single field tuple:

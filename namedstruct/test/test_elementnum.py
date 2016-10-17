@@ -4,7 +4,7 @@
 
 import unittest
 
-from namedstruct.elementnum import ElementNum
+from starstruct.elementnum import ElementNum
 
 
 # pylint: disable=line-too-long,invalid-name

@@ -5,7 +5,7 @@
 import unittest
 
 import enum
-from namedstruct.elementenum import ElementEnum
+from starstruct.elementenum import ElementEnum
 
 
 class SimpleEnum(enum.Enum):

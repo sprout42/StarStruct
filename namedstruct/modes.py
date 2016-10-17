@@ -1,4 +1,4 @@
-"""binary representation modes used for a NamedStruct object."""
+"""binary representation modes used for a StarStruct object."""
 
 import sys
 import enum
@@ -6,7 +6,7 @@ import enum
 
 @enum.unique
 class Mode(enum.Enum):
-    """The NamedStruct modes match the modes supported by struct.pack/unpack."""
+    """The StarStruct modes match the modes supported by struct.pack/unpack."""
     Native = '='
     Little = '<'
     Big = '>'

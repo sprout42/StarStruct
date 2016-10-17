@@ -1,20 +1,20 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 
 import struct
 import re
 
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 @register
 class ElementBase(Element):
     """
-    The basic NamedStruct element class.
+    The basic StarStruct element class.
     """
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory

@@ -1,4 +1,4 @@
-NamedStruct
+StarStruct
 ======
 A package that provides consistent packing and unpacking of binary data
 
@@ -13,17 +13,17 @@ Requirements
 Installation
 ------------
 
-NamedStruct can be installed with pip:
+StarStruct can be installed with pip:
 
 ```
-$ pip install namedstruct
+$ pip install starstruct
 ```
 
 or directly from the source code:
 
 ```
-$ git clone https://github.com/sprout42/NamedStruct.git
-$ cd NamedStruct
+$ git clone https://github.com/sprout42/StarStruct.git
+$ cd StarStruct
 $ python setup.py install
 ```
 
@@ -34,7 +34,7 @@ After installation, the package can imported:
 
 ```
 $ python
->>> import namedstruct
->>> namedstruct.__version__
+>>> import starstruct
+>>> starstruct.__version__
 ```
 

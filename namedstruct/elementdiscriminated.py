@@ -1,18 +1,18 @@
-"""NamedStruct element class."""
+"""StarStruct element class."""
 
-import namedstruct
-from namedstruct.element import register, Element
-from namedstruct.modes import Mode
+import starstruct
+from starstruct.element import register, Element
+from starstruct.modes import Mode
 
 
 @register
 class ElementDiscriminated(Element):
     """
-    The discriminated NamedStruct element class.
+    The discriminated StarStruct element class.
     """
 
     def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a NamedStruct element object."""
+        """Initialize a StarStruct element object."""
 
         # All of the type checks have already been performed by the class
         # factory
@@ -21,7 +21,7 @@ class ElementDiscriminated(Element):
 
         # Discriminated elements don't use the normal struct format, the format
         # is the supplied dictionary where the key is a value of the referenced
-        # enum element, and the value for each entry is a NamedStruct.Message
+        # enum element, and the value for each entry is a StarStruct.Message
         # object.
         self.format = field[1]
 
@@ -40,7 +40,7 @@ class ElementDiscriminated(Element):
         return len(field) == 3 \
             and isinstance(field[1], dict) \
             and isinstance(field[2], str) \
-            and all(isinstance(val, (namedstruct.message.Message, type(None)))
+            and all(isinstance(val, (starstruct.message.Message, type(None)))
                     for val in field[1].values())
 
     def validate(self, msg):
@@ -52,7 +52,7 @@ class ElementDiscriminated(Element):
         keys of the discriminated format must be valid instances of the
         referenced Enum class.
         """
-        from namedstruct.elementenum import ElementEnum
+        from starstruct.elementenum import ElementEnum
         if not isinstance(msg[self.ref], ElementEnum):
             err = 'discriminated field {} reference {} invalid type'
             raise TypeError(err.format(self.name, self.ref))

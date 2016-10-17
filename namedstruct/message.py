@@ -1,9 +1,9 @@
-"""NamedStruct class."""
+"""StarStruct class."""
 
 import collections
 import struct
-import namedstruct.modes
-from namedstruct.element import Element
+import starstruct.modes
+from starstruct.element import Element
 
 
 # pylint: disable=line-too-long
@@ -11,9 +11,9 @@ class Message(object):
     """An object much like NamedTuple, but with additional formatting."""
 
     # pylint: disable=too-many-branches
-    def __init__(self, name, fields, mode=namedstruct.modes.Mode.Native, alignment=1):
+    def __init__(self, name, fields, mode=starstruct.modes.Mode.Native, alignment=1):
         """
-        Initialize a NamedStruct object.
+        Initialize a StarStruct object.
 
         Creates 2 internal items, a format string which is used to call the
         struct module functions for packing and unpacking data, and a
@@ -37,7 +37,7 @@ class Message(object):
                 or not all(isinstance(x, tuple) for x in fields):
             raise TypeError('invalid fields: {}'.format(fields))
 
-        if not isinstance(mode, namedstruct.modes.Mode):
+        if not isinstance(mode, starstruct.modes.Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # Create an ordered dictionary (so element order is preserved) out of
@@ -66,7 +66,7 @@ class Message(object):
 
     def update(self, mode=None, alignment=None):
         """ Change the mode of a message. """
-        if mode and not isinstance(mode, namedstruct.modes.Mode):
+        if mode and not isinstance(mode, starstruct.modes.Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # Change the mode for all elements
