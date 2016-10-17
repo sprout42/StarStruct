@@ -19,7 +19,7 @@ class SimpleEnum(enum.Enum):
 
 
 # pylint: disable=line-too-long,invalid-name
-class TestNamedstruct(unittest.TestCase):
+class TestStarStruct(unittest.TestCase):
     """StarStruct module tests"""
 
     VarTest = Message('VarTest', [
