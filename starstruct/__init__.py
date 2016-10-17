@@ -17,9 +17,29 @@ try:
     from starstruct.message import Message
     from starstruct.modes import Mode
 
+    # TODO: make this import more automatic
+    from starstruct.element import Element
+    from starstruct.elementbase import ElementBase
+    from starstruct.elementpad import ElementPad
+    from starstruct.elementenum import ElementEnum
+    from starstruct.elementnum import ElementNum
+    from starstruct.elementfixedpoint import ElementFixedPoint
+    from starstruct.elementstring import ElementString
+    from starstruct.elementvariable import ElementVariable
+    from starstruct.elementdiscriminated import ElementDiscriminated
+
     # silence F401 flake8 error
     assert Message
     assert Mode
+    assert Element
+    assert ElementBase
+    assert ElementPad
+    assert ElementEnum
+    assert ElementNum
+    assert ElementFixedPoint
+    assert ElementString
+    assert ElementVariable
+    assert ElementDiscriminated
 
     __all__ = ['Message', 'Mode']
 except ImportError:  # pragma: no cover (manual test)
