@@ -22,7 +22,7 @@ class StrEnum(enum.Enum):
     bar = 'bar'
 
 
-# pylint: disable=line-too-long,invalid-name
+# pylint: disable=line-too-long,invalid-name,no-self-use
 class TestElementEnum(unittest.TestCase):
     """ElementEnum module tests"""
 

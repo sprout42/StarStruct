@@ -3,9 +3,10 @@
 """Tests for the starstruct class"""
 
 import enum
-import pytest
 import struct
 import unittest
+
+import pytest
 
 from starstruct.message import Message
 # from starstruct.modes import Mode

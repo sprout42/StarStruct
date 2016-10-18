@@ -7,7 +7,7 @@ import unittest
 from starstruct.elementbase import ElementBase
 
 
-# pylint: disable=line-too-long,invalid-name
+# pylint: disable=line-too-long,invalid-name,no-self-use
 class TestElementBase(unittest.TestCase):
     """ElementBase module tests"""
 

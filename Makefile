@@ -1,42 +1,46 @@
 # Project settings
 PROJECT := StarStruct
 PACKAGE := starstruct
-SOURCES := Makefile setup.py $(shell find $(PACKAGE) -name '*.py')
-EGG_INFO := $(subst -,_,$(PROJECT)).egg-info
+REPOSITORY := sprout42/starstruct
+PACKAGES := $(PACKAGE)
+CONFIG := $(shell ls *.py)
+MODULES := $(shell find $(PACKAGES) -name '*.py') $(CONFIG)
 
 # Python settings
 ifndef TRAVIS
-	PYTHON_MAJOR := 3
-	PYTHON_MINOR := 5
+	PYTHON_MAJOR ?= 3
+	PYTHON_MINOR ?= 5
 endif
-
-# Test settings
-UNIT_TEST_COVERAGE := 100
-INTEGRATION_TEST_COVERAGE := 100
 
 # System paths
 PLATFORM := $(shell python -c 'import sys; print(sys.platform)')
 ifneq ($(findstring win32, $(PLATFORM)), )
+	WINDOWS := true
 	SYS_PYTHON_DIR := C:\\Python$(PYTHON_MAJOR)$(PYTHON_MINOR)
 	SYS_PYTHON := $(SYS_PYTHON_DIR)\\python.exe
-	SYS_VIRTUALENV := $(SYS_PYTHON_DIR)\\Scripts\\virtualenv.exe
 	# https://bugs.launchpad.net/virtualenv/+bug/449537
 	export TCL_LIBRARY=$(SYS_PYTHON_DIR)\\tcl\\tcl8.5
 else
+	ifneq ($(findstring darwin, $(PLATFORM)), )
+		MAC := true
+	else
+		LINUX := true
+	endif
 	SYS_PYTHON := python$(PYTHON_MAJOR)
 	ifdef PYTHON_MINOR
 		SYS_PYTHON := $(SYS_PYTHON).$(PYTHON_MINOR)
 	endif
-	SYS_VIRTUALENV := virtualenv
 endif
 
-# virtualenv paths
+# Virtual environment paths
 ENV := env
 ifneq ($(findstring win32, $(PLATFORM)), )
 	BIN := $(ENV)/Scripts
+	ACTIVATE := $(BIN)/activate.bat
 	OPEN := cmd /c start
 else
 	BIN := $(ENV)/bin
+	ACTIVATE := . $(BIN)/activate
 	ifneq ($(findstring cygwin, $(PLATFORM)), )
 		OPEN := cygstart
 	else
@@ -44,205 +48,230 @@ else
 	endif
 endif
 
-# virtualenv executables
-PYTHON := $(BIN)/python
-PIP := $(BIN)/pip
-EASY_INSTALL := $(BIN)/easy_install
-RST2HTML := $(PYTHON) $(BIN)/rst2html.py
-PDOC := $(PYTHON) $(BIN)/pdoc
-PEP8 := $(BIN)/pep8
-PEP8RADIUS := $(BIN)/pep8radius
-PEP257 := $(BIN)/pep257
-PYLINT := $(BIN)/pylint
-PYREVERSE := $(BIN)/pyreverse
-NOSE := $(BIN)/nosetests
-PYTEST := $(BIN)/py.test
-COVERAGE := $(BIN)/coverage
+# Virtual environment executables
+ifndef TRAVIS
+	BIN_ := $(BIN)/
+endif
+PYTHON := $(BIN_)python
+PIP := $(BIN_)pip
+EASY_INSTALL := $(BIN_)easy_install
+SNIFFER := $(BIN_)sniffer
+HONCHO := $(ACTIVATE) && $(BIN_)honcho
 
-# Flags for PHONY targets
-DEPENDS_CI := $(ENV)/.depends-ci
-DEPENDS_DEV := $(ENV)/.depends-dev
-ALL := $(ENV)/.all
-
-# Main Targets #################################################################
+# MAIN TASKS ###################################################################
 
 .PHONY: all
-all: depends doc $(ALL)
-$(ALL): $(SOURCES)
-	$(MAKE) check
-	touch $(ALL)  # flag to indicate all setup steps were successful
+all: doc
 
 .PHONY: ci
-ci: check test tests
+ci: check test ## Run all tasks that determine CI status
 
-# Development Installation #####################################################
+.PHONY: watch
+watch: install .clean-test ## Continuously run all CI tasks when files chanage
+	$(SNIFFER)
 
-.PHONY: env
-env: .virtualenv $(EGG_INFO)
-$(EGG_INFO): Makefile setup.py requirements.txt
-	VIRTUAL_ENV=$(ENV) $(PYTHON) setup.py develop
-	touch $(EGG_INFO)  # flag to indicate package is installed
+.PHONY: run ## Start the program
+run: install
+	$(PYTHON) $(PACKAGE)/__main__.py
 
-.PHONY: .virtualenv
-.virtualenv: $(PIP)
-$(PIP):
-	$(SYS_VIRTUALENV) --python $(SYS_PYTHON) $(ENV)
-	$(PIP) install --upgrade pip
+# SYSTEM DEPENDENCIES ##########################################################
 
-.PHONY: depends
-depends: depends-ci depends-dev
+.PHONY: doctor
+doctor:  ## Confirm system dependencies are available
+	@ echo "Checking Python version:"
+	@ python --version | tee /dev/stderr | grep -q "3.5."
 
-.PHONY: depends-ci
-depends-ci: env Makefile $(DEPENDS_CI)
-$(DEPENDS_CI): Makefile
-	$(PIP) install --upgrade pep8 pep257 pylint coverage pytest pytest-cov
-	touch $(DEPENDS_CI)  # flag to indicate dependencies are installed
+# PROJECT DEPENDENCIES #########################################################
 
-.PHONY: depends-dev
-depends-dev: env Makefile $(DEPENDS_DEV)
-$(DEPENDS_DEV): Makefile
-	$(PIP) install --upgrade pip pep8radius pygments docutils pdoc wheel readme
-	touch $(DEPENDS_DEV)  # flag to indicate dependencies are installed
+DEPS_CI := $(ENV)/.install-ci
+DEPS_DEV := $(ENV)/.install-dev
+DEPS_BASE := $(ENV)/.install-base
 
-# Documentation ################################################################
+.PHONY: install
+install: $(DEPS_CI) $(DEPS_DEV) $(DEPS_BASE) ## Install all project dependencies
 
-.PHONY: doc
-doc: readme verify-readme apidocs uml
+$(DEPS_CI): requirements/ci.txt $(PIP)
+	$(PIP) install --upgrade -r $<
+	@ touch $@  # flag to indicate dependencies are installed
 
-.PHONY: readme
-readme: depends-dev README-github.html README-pypi.html
-README-github.html: README.md
-	pandoc -f markdown_github -t html -o README-github.html README.md
-README-pypi.html: README.rst
-	$(RST2HTML) README.rst README-pypi.html
-README.rst: README.md
-	pandoc -f markdown_github -t rst -o README.rst README.md
+$(DEPS_DEV): requirements/dev.txt $(PIP)
+	$(PIP) install --upgrade -r $<
+ifdef WINDOWS
+	@ echo "Manually install pywin32: https://sourceforge.net/projects/pywin32/files/pywin32"
+else ifdef MAC
+	$(PIP) install --upgrade pync MacFSEvents
+else ifdef LINUX
+	$(PIP) install --upgrade pyinotify
+endif
+	@ touch $@  # flag to indicate dependencies are installed
 
-.PHONY: verify-readme
-verify-readme: README.rst
-	$(PYTHON) setup.py check --restructuredtext --strict --metadata
+$(DEPS_BASE): setup.py requirements.txt $(PYTHON)
+	$(PYTHON) setup.py develop
+	@ touch $@  # flag to indicate dependencies are installed
 
-.PHONY: apidocs
-apidocs: depends-dev apidocs/$(PACKAGE)/index.html
-apidocs/$(PACKAGE)/index.html: $(SOURCES)
-	$(PDOC) --html --overwrite $(PACKAGE) --html-dir apidocs
+$(PIP): $(PYTHON)
+	$(PYTHON) -m pip install --upgrade pip setuptools
+	@ touch $@
 
-.PHONY: uml
-uml: depends-dev docs/*.png
-docs/*.png: $(SOURCES)
-	$(PYREVERSE) $(PACKAGE) -p $(PACKAGE) -f ALL -o png --ignore test
-	- mv -f classes_$(PACKAGE).png docs/classes.png
-	- mv -f packages_$(PACKAGE).png docs/packages.png
+$(PYTHON):
+	$(SYS_PYTHON) -m venv $(ENV)
 
-.PHONY: read
-read: doc
-	$(OPEN) apidocs/$(PACKAGE)/index.html
-	$(OPEN) README-pypi.html
-	$(OPEN) README-github.html
+# CHECKS #######################################################################
 
-# Static Analysis ##############################################################
+PEP8 := $(BIN_)pep8
+PEP8RADIUS := $(BIN_)pep8radius
+PEP257 := $(BIN_)pep257
+PYLINT := $(BIN_)pylint
 
 .PHONY: check
-check: pep8 pep257 pylint
+check: pep8 pylint ## Run linters and static analysis
 
 .PHONY: pep8
-pep8: depends-ci
-# E501: line too long (checked by PyLint)
-	$(PEP8) $(PACKAGE) --ignore=E501
+pep8: install ## Check for convention issues
+	$(PEP8) $(PACKAGES) $(CONFIG) --config=.pep8rc
 
 .PHONY: pep257
-pep257: depends-ci
-# D102: docstring missing (checked by PyLint)
-# D202: No blank lines allowed *after* function docstring
-	$(PEP257) $(PACKAGE) --ignore=D102,D202
+pep257: install ## Check for docstring issues
+	$(PEP257) $(PACKAGES) $(CONFIG)
 
 .PHONY: pylint
-pylint: depends-ci
-	$(PYLINT) $(PACKAGE) --rcfile=.pylintrc
+pylint: install ## Check for code issues
+	$(PYLINT) $(PACKAGES) $(CONFIG) --rcfile=.pylintrc
 
 .PHONY: fix
-fix: depends-dev
+fix: install
 	$(PEP8RADIUS) --docformatter --in-place
 
-# Testing ######################################################################
+# TESTS ########################################################################
 
-PYTEST_OPTS := -s --doctest-modules --cov=$(PACKAGE) --cov-report=term-missing --cov-report=html
+PYTEST := $(BIN_)py.test
+COVERAGE := $(BIN_)coverage
+COVERAGE_SPACE := $(BIN_)coverage.space
+
+RANDOM_SEED ?= $(shell date +%s)
+
+PYTEST_CORE_OPTS := -s --doctest-modules -r xXw -vv
+PYTEST_COV_OPTS := --cov=$(PACKAGE) --no-cov-on-fail --cov-report=term-missing --cov-report=html
+PYTEST_RANDOM_OPTS := --random --random-seed=$(RANDOM_SEED)
+
+PYTEST_OPTS := $(PYTEST_CORE_OPTS) $(PYTEST_COV_OPTS) $(PYTEST_RANDOM_OPTS)
+PYTEST_OPTS_FAILFAST := $(PYTEST_OPTS) --last-failed --exitfirst
+
+FAILURES := .cache/v/cache/lastfailed
+REPORTS ?= xmlreport
 
 .PHONY: test
-# python -m unittest discover
-test: depends-ci .clean-test
-	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
-	$(COVERAGE) report --fail-under=$(UNIT_TEST_COVERAGE) > /dev/null
+test: test-all
 
-.PHONY: tests
-tests: depends-ci .clean-test
-	TEST_INTEGRATION=1 $(PYTEST) $(PYTEST_OPTS) $(PACKAGE)
-	$(COVERAGE) report --fail-under=$(INTEGRATION_TEST_COVERAGE) > /dev/null
+.PHONY: test-unit
+test-unit: install ## Run the unit tests
+	@- mv $(FAILURES) $(FAILURES).bak
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGE) --junitxml=$(REPORTS)/unit.xml
+	@- mv $(FAILURES).bak $(FAILURES)
+	$(COVERAGE_SPACE) $(REPOSITORY) unit
+
+.PHONY: test-int
+test-int: install ## Run the integration tests
+	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) tests; fi
+	$(PYTEST) $(PYTEST_OPTS) tests --junitxml=$(REPORTS)/integration.xml
+	$(COVERAGE_SPACE) $(REPOSITORY) integration
+
+.PHONY: test-all
+test-all: install ## Run all the tests
+	@ if test -e $(FAILURES); then $(PYTEST) $(PYTEST_OPTS_FAILFAST) $(PACKAGES); fi
+	$(PYTEST) $(PYTEST_OPTS) $(PACKAGES) --junitxml=$(REPORTS)/overall.xml
+	$(COVERAGE_SPACE) $(REPOSITORY) overall
 
 .PHONY: read-coverage
 read-coverage:
 	$(OPEN) htmlcov/index.html
 
-# Cleanup ######################################################################
+# DOCUMENTATION ################################################################
 
-.PHONY: clean
-clean: .clean-dist .clean-test .clean-doc .clean-build
-	rm -rf $(ALL)
+PYREVERSE := $(BIN_)pyreverse
+PDOC := $(PYTHON) $(BIN_)pdoc
+MKDOCS := $(BIN_)mkdocs
 
-.PHONY: clean-env
-clean-env: clean
-	rm -rf $(ENV)
+PDOC_INDEX := docs/apidocs/$(PACKAGE)/index.html
+MKDOCS_INDEX := site/index.html
 
-.PHONY: clean-all
-clean-all: clean clean-env .clean-workspace
+.PHONY: doc
+doc: uml ## Run documentation generators
 
-.PHONY: .clean-build
-.clean-build:
-	find $(PACKAGE) -name '*.pyc' -delete
-	find $(PACKAGE) -name '__pycache__' -delete
-	rm -rf $(EGG_INFO)
+.PHONY: uml
+uml: install docs/*.png ## Generate UML diagrams for classes and packages
+docs/*.png: $(MODULES)
+	$(PYREVERSE) $(PACKAGE) -p $(PACKAGE) -a 1 -f ALL -o png --ignore tests
+	- mv -f classes_$(PACKAGE).png docs/classes.png
+	- mv -f packages_$(PACKAGE).png docs/packages.png
 
-.PHONY: .clean-doc
-.clean-doc:
-	rm -rf README.rst apidocs *.html docs/*.png
+.PHONY: pdoc
+pdoc: install $(PDOC_INDEX)  ## Generate API documentaiton with pdoc
+$(PDOC_INDEX): $(MODULES)
+	$(PDOC) --html --overwrite $(PACKAGE) --html-dir docs/apidocs
+	@ touch $@
 
-.PHONY: .clean-test
-.clean-test:
-	rm -rf .coverage htmlcov
+.PHONY: mkdocs
+mkdocs: install $(MKDOCS_INDEX) ## Build the documentation site with mkdocs
+$(MKDOCS_INDEX): mkdocs.yml docs/*.md
+	ln -sf `realpath README.md --relative-to=docs` docs/index.md
+	ln -sf `realpath CHANGELOG.md --relative-to=docs/about` docs/about/changelog.md
+	ln -sf `realpath CONTRIBUTING.md --relative-to=docs/about` docs/about/contributing.md
+	ln -sf `realpath LICENSE.md --relative-to=docs/about` docs/about/license.md
+	$(MKDOCS) build --clean --strict
 
-.PHONY: .clean-dist
-.clean-dist:
-	rm -rf dist build
+.PHONY: mkdocs-live
+mkdocs-live: mkdocs ## Launch and continuously rebuild the mkdocs site
+	eval "sleep 3; open http://127.0.0.1:8000" &
+	$(MKDOCS) serve
 
-.PHONY: .clean-workspace
-.clean-workspace:
-	rm -rf *.sublime-workspace
+# BUILD ########################################################################
 
-# Release ######################################################################
+PYINSTALLER := $(BIN_)pyinstaller
+PYINSTALLER_MAKESPEC := $(BIN_)pyi-makespec
 
-.PHONY: register-test
-register-test: doc
-	$(PYTHON) setup.py register --strict --repository https://testpypi.python.org/pypi
+DIST_FILES := dist/*.tar.gz dist/*.whl
+EXE_FILES := dist/$(PROJECT).*
 
-.PHONY: upload-test
-upload-test: .git-no-changes register-test
-	$(PYTHON) setup.py sdist upload --repository https://testpypi.python.org/pypi
-	$(PYTHON) setup.py bdist_wheel upload --repository https://testpypi.python.org/pypi
-	$(OPEN) https://testpypi.python.org/pypi/$(PROJECT)
+.PHONY: dist
+dist: install $(DIST_FILES)
+$(DIST_FILES): $(MODULES) README.rst CHANGELOG.rst
+	rm -f $(DIST_FILES)
+	$(PYTHON) setup.py check --restructuredtext --strict --metadata
+	$(PYTHON) setup.py sdist
+	$(PYTHON) setup.py bdist_wheel
+
+%.rst: %.md
+	pandoc -f markdown_github -t rst -o $@ $<
+
+.PHONY: exe
+exe: install $(EXE_FILES)
+$(EXE_FILES): $(MODULES) $(PROJECT).spec
+	# For framework/shared support: https://github.com/yyuu/pyenv/wiki
+	$(PYINSTALLER) $(PROJECT).spec --noconfirm --clean
+
+$(PROJECT).spec:
+	$(PYINSTALLER_MAKESPEC) $(PACKAGE)/__main__.py --onefile --windowed --name=$(PROJECT)
+
+# RELEASE ######################################################################
+
+TWINE := $(BIN_)twine
 
 .PHONY: register
-register: doc
-	$(PYTHON) setup.py register --strict
+register: dist ## Register the project on PyPI
+	@ echo NOTE: your project must be registered manually
+	@ echo https://github.com/pypa/python-packaging-user-guide/issues/263
+	# TODO: switch to twine when the above issue is resolved
+	# $(TWINE) register dist/*.whl
 
 .PHONY: upload
-upload: .git-no-changes register
-	$(PYTHON) setup.py sdist upload
-	$(PYTHON) setup.py bdist_wheel upload
+upload: .git-no-changes register ## Upload the current version to PyPI
+	$(TWINE) upload dist/*
 	$(OPEN) https://pypi.python.org/pypi/$(PROJECT)
 
 .PHONY: .git-no-changes
 .git-no-changes:
-	@if git diff --name-only --exit-code;         \
+	@ if git diff --name-only --exit-code;        \
 	then                                          \
 		echo Git working copy is clean...;        \
 	else                                          \
@@ -251,16 +280,44 @@ upload: .git-no-changes register
 		exit -1;                                  \
 	fi;
 
-# System Installation ##########################################################
+# CLEANUP ######################################################################
 
-.PHONY: develop
-develop:
-	$(SYS_PYTHON) setup.py develop
+.PHONY: clean
+clean: .clean-dist .clean-test .clean-doc .clean-build ## Delete all generated and temporary files
 
-.PHONY: install
-install:
-	$(SYS_PYTHON) setup.py install
+.PHONY: clean-all
+clean-all: clean .clean-env .clean-workspace
 
-.PHONY: download
-download:
-	pip install $(PROJECT)
+.PHONY: .clean-build
+.clean-build:
+	find $(PACKAGES) -name '*.pyc' -delete
+	find $(PACKAGES) -name '__pycache__' -delete
+	rm -rf *.egg-info
+
+.PHONY: .clean-doc
+.clean-doc:
+	rm -rf README.rst docs/apidocs *.html docs/*.png site
+
+.PHONY: .clean-test
+.clean-test:
+	rm -rf .cache .pytest .coverage htmlcov xmlreport
+
+.PHONY: .clean-dist
+.clean-dist:
+	rm -rf *.spec dist build
+
+.PHONY: .clean-env
+.clean-env: clean
+	rm -rf $(ENV)
+
+.PHONY: .clean-workspace
+.clean-workspace:
+	rm -rf *.sublime-workspace
+
+# HELP #########################################################################
+
+.PHONY: help
+help: all
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+
+.DEFAULT_GOAL := help

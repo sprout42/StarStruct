@@ -78,15 +78,11 @@ class Element(object):
 
         for elem in cls.elementtypes:
             elem_found = False
-            try:
-                if elem.valid(field):
-                    elem_found = True
-            except:
-                continue
-            
+            if elem.valid(field):
+                elem_found = True
+
             if elem_found:
                 return elem(field, mode, alignment)
-
 
         # If the function made it this far, the field specification is not valid
         raise TypeError('invalid field: {}'.format(field))
