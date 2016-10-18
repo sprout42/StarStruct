@@ -58,7 +58,7 @@ setuptools.setup(
     long_description=read_descriptions(),
     license='MIT',
     classifiers=[
-        'Development Status :: 1 - Planning',
+        'Development Status :: 4 - Beta',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3.5',
