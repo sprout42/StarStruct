@@ -3,7 +3,7 @@
 import sys
 
 __project__ = 'StarStruct'
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 
 VERSION = __project__ + '-' + __version__
 
