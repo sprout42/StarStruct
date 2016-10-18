@@ -124,7 +124,7 @@ PEP257 := $(BIN_)pep257
 PYLINT := $(BIN_)pylint
 
 .PHONY: check
-check: pep8 pep257 pylint ## Run linters and static analysis
+check: pep8 pylint ## Run linters and static analysis
 
 .PHONY: pep8
 pep8: install ## Check for convention issues
