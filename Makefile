@@ -2,7 +2,7 @@
 PROJECT := StarStruct
 PACKAGE := starstruct
 REPOSITORY := sprout42/starstruct
-PACKAGES := $(PACKAGE) tests
+PACKAGES := $(PACKAGE)
 CONFIG := $(shell ls *.py)
 MODULES := $(shell find $(PACKAGES) -name '*.py') $(CONFIG)
 
