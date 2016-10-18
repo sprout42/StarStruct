@@ -44,14 +44,10 @@ class ElementEnum(Element):
         The basics have already been validated by the Element factory class,
         validate that the struct format is a valid numeric value.
         """
-        try:
-            is_valid = (len(field) == 3 and
-                        isinstance(field[1], str) and
-                        re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) and
-                        issubclass(field[2], enum.Enum))
-        except TypeError:
-            is_valid = False
-        return is_valid
+        return (len(field) == 3 and
+                isinstance(field[1], str) and
+                re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) and
+                issubclass(field[2], enum.Enum))
 
     def validate(self, msg):
         """
