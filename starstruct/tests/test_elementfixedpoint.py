@@ -11,6 +11,7 @@ from starstruct.message import Message
 from starstruct.modes import Mode
 
 
+# pylint: disable=no-self-use
 class TestElementFixedPointHelpers(unittest.TestCase):
     """Test the helpers for this class"""
     def test_invalid_formats(self):

@@ -78,11 +78,8 @@ class Element(object):
 
         for elem in cls.elementtypes:
             elem_found = False
-            try:
-                if elem.valid(field):
-                    elem_found = True
-            except:
-                continue
+            if elem.valid(field):
+                elem_found = True
 
             if elem_found:
                 return elem(field, mode, alignment)

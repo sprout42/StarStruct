@@ -5,6 +5,8 @@ import enum
 import struct
 import unittest
 
+import pytest
+
 from starstruct.message import Message
 
 
@@ -31,6 +33,7 @@ NotSameMessage = Message('WowNotEvenClose', [
 ])
 
 
+# pylint: disable=no-self-use
 class TestLengthHelper(unittest.TestCase):
     """Test the length for this class"""
     def test_empty_length(self):
@@ -77,6 +80,7 @@ class TestLengthHelper(unittest.TestCase):
         my_named_format = 'B32s'
         assert len(long_message) == struct.calcsize('BBBB' + my_named_format)
 
+    @pytest.mark.skip(reason="don't know how to test this")
     def test_variable_length(self):
         dont_know_how_to_test = Message('DontKnow', [
             ('numNames', 'B', 'names'),
@@ -85,5 +89,4 @@ class TestLengthHelper(unittest.TestCase):
 
         # Not sure how to test this one yet
         # could do some multiples thing or just let it be.
-        if False:
-            print(len(dont_know_how_to_test))
+        print(len(dont_know_how_to_test))
