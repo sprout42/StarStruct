@@ -76,12 +76,19 @@ class Element(object):
         if not field[0] or not isinstance(field[0], (str, bytes)):
             raise TypeError('invalid name: {}'.format(field[0]))
 
+        valid_elems = []
         for elem in cls.elementtypes:
             try:
                 if elem.valid(field):
-                    return elem(field, mode, alignment)
-            except TypeError:
+                    valid_elems.append(elem)
+            except (TypeError, KeyError):
                 continue
+
+        if len(valid_elems) > 1:
+            raise ValueError('More than one elemn was valid.\n\tField: {0}\n\tElems: {1}'.format(
+                field, valid_elems))
+        elif len(valid_elems) == 1:
+            return valid_elems[0](field, mode, alignment)
 
         # If the function made it this far, the field specification is not valid
         raise TypeError('invalid field: {}'.format(field))

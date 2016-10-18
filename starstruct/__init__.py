@@ -25,6 +25,7 @@ try:
     from starstruct.elementnum import ElementNum
     from starstruct.elementfixedpoint import ElementFixedPoint
     from starstruct.elementstring import ElementString
+    from starstruct.elementlength import ElementLength
     from starstruct.elementvariable import ElementVariable
     from starstruct.elementdiscriminated import ElementDiscriminated
 
@@ -38,6 +39,7 @@ try:
     assert ElementNum
     assert ElementFixedPoint
     assert ElementString
+    assert ElementLength
     assert ElementVariable
     assert ElementDiscriminated
 
