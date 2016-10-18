@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/sprout42/StarStruct.svg?branch=master)](https://travis-ci.org/sprout42/StarStruct.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/sprout42/StarStruct/badge.svg?branch=master)](https://coveralls.io/github/sprout42/StarStruct?branch=master)
+
 StarStruct
 ======
 A package that provides consistent packing and unpacking of binary data
@@ -37,4 +40,3 @@ $ python
 >>> import starstruct
 >>> starstruct.__version__
 ```
-
