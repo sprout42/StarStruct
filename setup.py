@@ -61,6 +61,7 @@ setuptools.setup(
         'Development Status :: 4 - Beta',
         'Natural Language :: English',
         'Operating System :: OS Independent',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 3.5',
     ],
 
