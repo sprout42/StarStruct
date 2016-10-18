@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/sprout42/StarStruct.svg?branch=master)](https://travis-ci.org/sprout42/StarStruct.svg?branch=master)
+[![Build Status](https://travis-ci.org/sprout42/StarStruct.svg?branch=master)](https://travis-ci.org/sprout42/StarStruct)
 [![Coverage Status](https://coveralls.io/repos/github/sprout42/StarStruct/badge.svg?branch=master)](https://coveralls.io/github/sprout42/StarStruct?branch=master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/sprout42/StarStruct/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/sprout42/StarStruct/?branch=master)
 
