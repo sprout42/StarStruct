@@ -4,7 +4,7 @@ disable=locally-disabled,fixme,too-few-public-methods,too-many-public-methods,in
 
 [FORMAT]
 
-max-line-length=80
+max-line-length=228
 
 ignore-long-lines=^.*((https?:)|(pragma:)|(TODO:)).*$
 

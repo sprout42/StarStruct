@@ -83,10 +83,9 @@ class Element(object):
                     elem_found = True
             except:
                 continue
-            
+
             if elem_found:
                 return elem(field, mode, alignment)
-
 
         # If the function made it this far, the field specification is not valid
         raise TypeError('invalid field: {}'.format(field))
