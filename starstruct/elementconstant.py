@@ -3,12 +3,14 @@ The constant element class for StarStruct
 
 To be used in the following way:
 
-ExampleMessage = Message('constant_message', [
-    ('regular', 'B'),                           # Two regular messages
-    ('fill_in_later', 'H'),
-    ('ending_sequence', 'II', (0xAA, 0xBB)),    # An ending sequence to a message
-                                                # that's always the same
-])
+.. code-block:: python
+
+    ExampleMessage = Message('constant_message', [
+        ('regular', 'B'),                           # Two regular messages
+        ('fill_in_later', 'H'),
+        ('ending_sequence', 'II', (0xAA, 0xBB)),    # An ending sequence to a message
+                                                    # that's always the same
+    ])
 
 :todo: Not sure if alignment is working correctly here, or if it needs to do anything
 

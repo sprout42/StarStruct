@@ -1,7 +1,10 @@
-"""StarStruct element class."""
+"""
+The basic StarStruct element class.
+"""
 
-import struct
 import re
+import struct
+from typing import Optional
 
 from starstruct.element import register, Element
 from starstruct.modes import Mode
@@ -10,11 +13,14 @@ from starstruct.modes import Mode
 @register
 class ElementBase(Element):
     """
-    The basic StarStruct element class.
+    Initialize a StarStruct element object.
+
+    :param field: The fields passed into the constructor of the element
+    :param mode: The mode for the Element
+    :param alignment: The number of bytes to align objects with.
     """
 
-    def __init__(self, field, mode=Mode.Native, alignment=1):
-        """Initialize a StarStruct element object."""
+    def __init__(self, field: tuple, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
 
         # All of the type checks have already been performed by the class
         # factory
@@ -38,7 +44,7 @@ class ElementBase(Element):
         self._struct = struct.Struct(self.format)
 
     @staticmethod
-    def valid(field):
+    def valid(field: tuple) -> bool:
         """
         Validation function to determine if a field tuple represents a valid
         base element type.
