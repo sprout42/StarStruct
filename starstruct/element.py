@@ -1,6 +1,8 @@
 """StarStruct element class."""
 
-import starstruct
+from typing import Optional, Tuple
+
+from starstruct.modes import Mode
 
 
 def register(cls):
@@ -22,13 +24,11 @@ class Element(object):
         cls.elementtypes.append(element)
 
     @classmethod
-    def factory(cls, field, mode=starstruct.modes.Mode.Native, alignment=1):
+    def factory(cls, field: tuple, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
         """
         Initialize a StarStruct element object based on the type of element
         parameters provided.
 
-        The field must be a tuple of the following form:
-            (name, format, <optional>)
 
         Where the values in the tuple determine the type of element.
 
@@ -61,9 +61,18 @@ class Element(object):
             a valid Enum element.  The validity of the referenced element must
             be checked after the creation of the entire message with the
             Message.validate() function.
+
+
+        :param field: The field must be a tuple of the following form::
+
+            (name, format, <optional>)
+
+        :param mode: The mode in which to pack the information.
+        :param alignment: The number of bytes to align objects with.
+        :returns: An element whose fields match those passed in
         """
 
-        if not isinstance(mode, starstruct.modes.Mode):
+        if not isinstance(mode, Mode):
             raise TypeError('invalid mode: {}'.format(mode))
 
         # The field parameter is a single field tuple:
@@ -94,26 +103,64 @@ class Element(object):
         raise TypeError('invalid field: {}'.format(field))
 
     @staticmethod
-    def valid(field):
-        """Require element objects to implement this function."""
+    def valid(field: tuple) -> bool:
+        """
+        Require element objects to implement this abstract function.
+
+        Validation function to determine if a field tuple represents a valid
+        element type.
+
+        The basics have already been validated by the Element factory class,
+        validate that the struct format is a valid numeric value.
+
+        :param field: The format specifier for an element
+        :returns: Whether this field tuple is valid for this class.
+        """
         raise NotImplementedError
 
-    def validate(self, msg):
-        """Require element objects to implement this function."""
+    def validate(self, msg: dict) -> bool:
+        """
+        Require element objects to implement this function.
+
+        :param msg: The current values passed in to the element
+        :returns: Whether this message represents a valid element.
+        """
         raise NotImplementedError
 
-    def update(self, mode, alignment):
-        """Require element objects to implement this function."""
+    def update(self, mode: Mode, alignment: int) -> None:
+        """
+        Require element objects to implement this function.
+
+        :param mode: The new mode for the Element
+        :param alignment: The new alignment for the element
+        """
         raise NotImplementedError
 
-    def pack(self, msg):
-        """Require element objects to implement this function."""
+    def pack(self, msg: dict) -> bytes:
+        """
+        Require element objects to implement this function.
+
+        :param msg: The values to pack into bytes
+        :returns: The msg packed into bytes as specified by the format
+        """
         raise NotImplementedError
 
-    def unpack(self, msg, buf):
-        """Require element objects to implement this function."""
+    def unpack(self, msg: dict, buf: bytes) -> Tuple[dict, bytes]:
+        """
+        Require element objects to implement this function.
+
+        :param msg: The values unpacked thus far from the bytes
+        :param buf: The remaining bytes to unpack
+        :returns: The updated message and the remaining bytes
+        """
         raise NotImplementedError
 
-    def make(self, msg):
-        """Require element objects to implement this function."""
+    def make(self, msg: dict):
+        """
+        Require element objects to implement this function.
+
+        :param msg: The values to place into the named tuple object
+
+        :todo: How do I specify the correct type for this?
+        """
         raise NotImplementedError

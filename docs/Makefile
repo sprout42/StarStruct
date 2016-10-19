@@ -221,7 +221,7 @@ pseudoxml:
 
 .PHONY: autodoc
 autodoc:
-	sphinx-apidoc -f -o ./source ../ -e
+	sphinx-apidoc -f -o ./source ../starstruct/ -e
 
 
 .PHONY: dummy
