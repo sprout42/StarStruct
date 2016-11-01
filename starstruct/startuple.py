@@ -2,12 +2,6 @@
 import collections
 
 
-# print(type(collections.namedtuple))
-
-# for item in dir(collections.namedtuple):
-#     print(item, getattr(collections.namedtuple, item))
-
-
 def StarTuple(name, named_fields, elements):
     named_tuple = collections.namedtuple(name, named_fields)
 
