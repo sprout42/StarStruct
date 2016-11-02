@@ -16,6 +16,9 @@ try:
     # pylint: disable=wrong-import-position
     from starstruct.message import Message
     from starstruct.modes import Mode
+    
+    from starstruct.startuple import StarTuple
+    assert StarTuple
 
     # TODO: make this import more automatic
     from starstruct.element import Element
