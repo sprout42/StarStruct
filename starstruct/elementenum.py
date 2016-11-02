@@ -93,7 +93,15 @@ class ElementEnum(Element):
         unused = buf[struct.calcsize(self.format) + extra_bytes:]
 
         # Convert the returned value to the referenced Enum type
-        return (self.ref(ret[0]), unused)
+        try:
+            member = self.ref(ret[0])
+        except ValueError as e:
+            raise ValueError(
+                'Value: {0} was not valid for {1}\n\twith msg: {2},\n\tbuf: {3}'.format(
+                    ret[0], self.ref, msg, buf
+                )).with_traceback(e.__traceback__)
+
+        return (member, unused)
 
     def make(self, msg):
         """Return the "transformed" value for this element"""
