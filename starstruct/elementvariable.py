@@ -184,7 +184,12 @@ class ElementVariable(Element):
         ret = []
         unused = buf
         if self.object_length:
-            for _ in range(getattr(msg, self.ref)):
+            if self.variable_repeat:
+                msg_range = getattr(msg, self.ref)
+            else:
+                msg_range = self.ref
+
+            for _ in range(msg_range):
                 (val, unused) = self.format.unpack_partial(unused)
                 ret.append(val)
         else:
