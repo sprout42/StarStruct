@@ -1,9 +1,11 @@
 """StarStruct class."""
 
 import collections
+
 import struct
 import starstruct.modes
 from starstruct.element import Element
+from starstruct.startuple import StarTuple
 
 
 # pylint: disable=line-too-long
@@ -62,7 +64,7 @@ class Message(object):
         # Now that the format has been validated, create a named tuple with the
         # correct fields.
         named_fields = [elem.name for elem in self._elements.values() if elem.name]
-        self._tuple = collections.namedtuple(self.name, named_fields)
+        self._tuple = StarTuple(self.name, named_fields, self._elements)
 
     def update(self, mode=None, alignment=None):
         """ Change the mode of a message. """
@@ -156,6 +158,8 @@ class Message(object):
         for field in self._tuple._fields:
             val = self._elements[field].make(kwargs)
             msg = msg._replace(**dict([(field, val)]))
+
+        # msg.__packed = self.pack(**kwargs)
         return msg
 
     def __len__(self):
