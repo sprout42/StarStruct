@@ -11,6 +11,7 @@ from starstruct.element import register, Element
 from starstruct.modes import Mode
 
 
+# TODO: I think we could probably just do most of this with struct.calcsize
 BITS_FORMAT = {
     ('c', 'b', 'B'): 1,
     ('h', 'H'): 2,
@@ -33,7 +34,7 @@ def get_bits_length(pack_format):
         # match_str = r'*' + match_str + r'*'
 
         if re.match(match_str, pack_format):
-            bits = BITS_FORMAT[fmt] * 4
+            bits = BITS_FORMAT[fmt] * 8
 
     if bits == -1:
         err = 'Pack format {0} was not a valid fixed point specifier'
