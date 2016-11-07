@@ -29,19 +29,19 @@ class TestElementFixedPointHelpers(unittest.TestCase):
 
     def test_invalid_higher_bits(self):
         with self.assertRaises(ValueError):
-            get_fixed_bits(257, 'i', 8)
+            get_fixed_bits(257, 'i', 32)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits(256, 'i', 8)
+            get_fixed_bits(256, 'i', 32)
 
         with self.assertRaises(ValueError):
             get_fixed_bits('hello', 'i', 3)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits(Decimal('20'), 'h', 4)
+            get_fixed_bits(Decimal('20'), 'h', 17)
 
         with self.assertRaises(ValueError):
-            get_fixed_bits(42, 'i', 12)
+            get_fixed_bits(42, 'i', 33)
 
     def test_valid_higher_bits(self):
         """Just make sure these all don't fail"""

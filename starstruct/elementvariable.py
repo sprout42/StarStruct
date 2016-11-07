@@ -76,7 +76,11 @@ class ElementVariable(Element):
         # All of the type checks have already been performed by the class
         # factory
         self.name = field[0]
-        self.ref = field[2]
+
+        try:
+            self.ref = field[2]
+        except IndexError:
+            self.ref = 1
 
         # Variable elements don't use the normal struct format, the format is
         # a StarStruct.Message object, but change the mode to match the
@@ -110,9 +114,13 @@ class ElementVariable(Element):
 
         :param field: The items to determine the structure of the element
         """
-        return len(field) == 3 \
-            and isinstance(field[1], starstruct.message.Message) \
-            and isinstance(field[2], (str, int, bytes))
+        if len(field) == 2:
+            return isinstance(field[1], starstruct.message.Message)
+        elif len(field) == 3:
+            return isinstance(field[1], starstruct.message.Message) \
+                and isinstance(field[2], (str, int, bytes))
+        else:
+            return False
 
     def validate(self, msg):
         """
@@ -151,15 +159,20 @@ class ElementVariable(Element):
         # When packing use the length of the current element to determine
         # how many elements to pack, not the length element of the message
         # (which should not be specified manually).
+        iterator = msg[self.name]
+
+        if not isinstance(iterator, list):
+            iterator = [iterator]
+
         if self.variable_repeat:
             if self.object_length:
                 ret = [self.format.pack(dict(elem)) if elem else self.format.pack({})
-                       for elem in msg[self.name]]
+                       for elem in iterator]
             else:
                 ret = []
                 length = 0
 
-                for elem in msg[self.name]:
+                for elem in iterator:
                     temp_elem = self.format.pack(dict(elem))
 
                     if length + len(temp_elem) <= msg[self.ref]:
@@ -169,7 +182,7 @@ class ElementVariable(Element):
         # and fill the rest of the byets with empty packing
         else:
             empty_byte = struct.pack('x')
-            ret = [self.format.pack(msg[self.name][index]) if index < len(msg[self.name]) else empty_byte * len(self.format)
+            ret = [self.format.pack(iterator[index]) if index < len(iterator) else empty_byte * len(self.format)
                    for index in range(self.ref)]
 
         # There is no need to make sure that the packed data is properly
