@@ -68,11 +68,14 @@ class BitField(object):
 
         useful for testing
         """
-        # Handle the same inputs as the pack function
-        if isinstance(arg, list):
-            values = [self.enum(value) for value in arg]
+        if arg:
+            # Handle the same inputs as the pack function
+            if isinstance(arg, list):
+                values = [self.enum(value) for value in arg]
+            else:
+                values = [self.enum(arg)]
         else:
-            values = [self.enum(arg)]
+            values = []
 
         # return this list as a frozenset
         return frozenset(values)
