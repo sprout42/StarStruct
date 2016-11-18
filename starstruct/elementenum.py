@@ -42,11 +42,11 @@ class ElementEnum(Element):
         enum element type.
 
         The basics have already been validated by the Element factory class,
-        validate that the struct format is a valid numeric value.
+        validate that the struct format is a valid numeric or string value.
         """
         return (len(field) == 3 and
                 isinstance(field[1], str) and
-                re.match(r'[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) and
+                re.match(r'\d*[cbB?hHiIlLqQnNfdP]|\d*[sp]', field[1]) and
                 issubclass(field[2], enum.Enum))
 
     def validate(self, msg):
