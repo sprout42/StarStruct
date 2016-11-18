@@ -76,17 +76,17 @@ class ElementEnum(Element):
         # is a valid value for the referenced enum class.
         item = msg[self.name]
         if isinstance(item, self.ref):
-            enum_val = item.value
+            enum_item = item
         elif isinstance(item, str):
             try:
-                enum_val = getattr(self.ref, msg[self.name]).value
+                enum_item = getattr(self.ref, msg[self.name])
             except AttributeError:
                 enum_name = re.match(r"<enum '(\S+)'>", str(self.ref)).group(1)
                 msg = '{} is not a valid {}'.format(msg[self.name], enum_name)
                 raise ValueError(msg)
         else:
-            enum_val = self.ref(item).value
-        data = self._struct.pack(enum_val)
+            enum_item = self.ref(item)
+        data = self._struct.pack(enum_item.value)
 
         # If the data does not meet the alignment, add some padding
         missing_bytes = len(data) % self._alignment
@@ -116,4 +116,17 @@ class ElementEnum(Element):
 
     def make(self, msg):
         """Return the "transformed" value for this element"""
-        return self.ref(msg[self.name])
+        # Handle the same conditions that pack handles
+        item = msg[self.name]
+        if isinstance(item, self.ref):
+            enum_item = item
+        elif isinstance(item, str):
+            try:
+                enum_item = getattr(self.ref, msg[self.name])
+            except AttributeError:
+                enum_name = re.match(r"<enum '(\S+)'>", str(self.ref)).group(1)
+                msg = '{} is not a valid {}'.format(msg[self.name], enum_name)
+                raise ValueError(msg)
+        else:
+            enum_item = self.ref(item)
+        return enum_item
