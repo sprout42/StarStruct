@@ -29,6 +29,7 @@ try:
     from starstruct.elementconstant import ElementConstant
     from starstruct.elementpad import ElementPad
     from starstruct.elementenum import ElementEnum
+    from starstruct.elementbitfield import ElementBitField
     from starstruct.elementnum import ElementNum
     from starstruct.elementfixedpoint import ElementFixedPoint
     from starstruct.elementstring import ElementString
@@ -45,6 +46,7 @@ try:
     assert ElementConstant
     assert ElementPad
     assert ElementEnum
+    assert ElementBitField
     assert ElementNum
     assert ElementFixedPoint
     assert ElementString
