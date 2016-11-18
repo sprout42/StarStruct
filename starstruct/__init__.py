@@ -16,9 +16,12 @@ try:
     # pylint: disable=wrong-import-position
     from starstruct.message import Message
     from starstruct.modes import Mode
-    
+
     from starstruct.startuple import StarTuple
     assert StarTuple
+
+    from starstruct.bitfield import BitField
+    assert BitField
 
     # TODO: make this import more automatic
     from starstruct.element import Element
@@ -36,6 +39,7 @@ try:
     # silence F401 flake8 error
     assert Message
     assert Mode
+    assert Mode
     assert Element
     assert ElementBase
     assert ElementConstant
@@ -48,6 +52,6 @@ try:
     assert ElementVariable
     assert ElementDiscriminated
 
-    __all__ = ['Message', 'Mode']
+    __all__ = ['Message', 'Mode', 'StarTuple', 'BitField']
 except ImportError:  # pragma: no cover (manual test)
     pass
