@@ -13,6 +13,14 @@ class SimpleEnum(enum.Enum):
     """Simple enum class for testing message pack/unpack"""
     one = 1
     two = 2
+    four = 4
+
+
+class SimpleEnumWithZero(enum.Enum):
+    """Simple enum class for testing message pack/unpack"""
+    zero = 0
+    one = 1
+    two = 2
 
 
 # pylint: disable=blacklisted-name
@@ -34,6 +42,11 @@ class TestElementBitField(unittest.TestCase):
             test_bitfield = BitField(StrEnum)  # noqa: F841
         msg = 'Enum {} members must have integer values'.format(repr(StrEnum))
         self.assertEqual(str(cm.exception), msg)
+
+        with self.assertRaises(TypeError) as cm:
+            test_bitfield = BitField(SimpleEnumWithZero)  # noqa: F841
+        msg = 'Cannot construct BitField from {} with a value for 0: {}'
+        self.assertEqual(str(cm.exception), msg.format(repr(SimpleEnumWithZero), SimpleEnumWithZero.zero))
 
     def test_not_valid(self):
         """Test field formats that are not valid ElementEnum elements."""
@@ -69,10 +82,14 @@ class TestElementBitField(unittest.TestCase):
         test_values = [
             ({'a': 2}, b'\x02'),
             ({'a': []}, b'\x00'),
+            ({'a': None}, b'\x00'),
+            ({'a': 0}, b'\x00'),  # 0 is treated the same as None or an empty list
             ({'a': [SimpleEnum.one]}, b'\x01'),
+            ({'a': ['one']}, b'\x01'),
             ({'a': [SimpleEnum.two]}, b'\x02'),
             ({'a': [SimpleEnum.one, SimpleEnum.two]}, b'\x03'),
             ({'a': [1, SimpleEnum.two]}, b'\x03'),
+            ({'a': [1, SimpleEnum.two, 'four']}, b'\x07'),
         ]
         for (in_val, out_val) in test_values:
             with self.subTest((out_val, in_val)):  # pylint: disable=no-member
@@ -90,11 +107,12 @@ class TestElementBitField(unittest.TestCase):
 
         elem = ElementBitField(field)
         test_values = [
-            ({'a': 0}, 0),
             ({'a': -1}, -1),
+            ({'a': 3}, 3),
             ({'a': [0, SimpleEnum.one]}, 0),
             ({'a': [SimpleEnum.one, -1]}, -1),
             ({'a': [SimpleEnum.two, 3]}, 3),
+            ({'a': ['TWO']}, 'TWO'),
         ]
 
         msg = '{} is not a valid {}'
@@ -115,11 +133,11 @@ class TestElementBitField(unittest.TestCase):
         elem = ElementBitField(field)
         test_values = [
             (b'\x00', frozenset([])),
-            (b'\xFC', frozenset([])),
+            (b'\xF8', frozenset([])),
             (b'\x01', frozenset([SimpleEnum.one])),
             (b'\x02', frozenset([SimpleEnum.two])),
             (b'\x03', frozenset([SimpleEnum.one, SimpleEnum.two])),
-            (b'\xF3', frozenset([SimpleEnum.one, SimpleEnum.two])),
+            (b'\xFF', frozenset([SimpleEnum.one, SimpleEnum.two, SimpleEnum.four])),
             (b'\xAA', frozenset([SimpleEnum.two])),
         ]
         for (in_val, out_val) in test_values:
