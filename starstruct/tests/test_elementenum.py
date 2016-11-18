@@ -71,6 +71,7 @@ class TestElementEnum(unittest.TestCase):
             ({'a': 2}, b'\x02'),
             ({'a': SimpleEnum.one}, b'\x01'),
             ({'a': SimpleEnum.two}, b'\x02'),
+            ({'a': 'two'}, b'\x02'),
         ]
         for (in_val, out_val) in test_values:
             with self.subTest((out_val, in_val)):  # pylint: disable=no-member
@@ -87,6 +88,8 @@ class TestElementEnum(unittest.TestCase):
         test_values = [
             {'a': -1},
             {'a': 3},
+            {'a': 'three'},
+            {'a': 'ONE'},
         ]
         msg = '{} is not a valid {}'
         for val in test_values:

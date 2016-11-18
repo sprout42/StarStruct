@@ -71,11 +71,22 @@ class ElementEnum(Element):
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
-        # The value to pack could be a raw value, or an enum value, first
-        # ensure that the value provided is a valid value for the referenced
-        # enum class.
-        enum_val = self.ref(msg[self.name])
-        data = self._struct.pack(enum_val.value)
+        # The value to pack could be a raw value, an enum value, or a string
+        # that represents the enum value, first ensure that the value provided
+        # is a valid value for the referenced enum class.
+        item = msg[self.name]
+        if isinstance(item, self.ref):
+            enum_val = item.value
+        elif isinstance(item, str):
+            try:
+                enum_val = getattr(self.ref, msg[self.name]).value
+            except AttributeError:
+                enum_name = re.match(r"<enum '(\S+)'>", str(self.ref)).group(1)
+                msg = '{} is not a valid {}'.format(msg[self.name], enum_name)
+                raise ValueError(msg)
+        else:
+            enum_val = self.ref(item).value
+        data = self._struct.pack(enum_val)
 
         # If the data does not meet the alignment, add some padding
         missing_bytes = len(data) % self._alignment
