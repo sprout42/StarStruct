@@ -197,3 +197,86 @@ class TestStarStruct(unittest.TestCase):
 
         made = AdderMessage.make(test_data_2)
         assert made.function_data == -1
+
+    def test_verifying_unpack(self):
+        def adder(*args):
+            return sum(args)
+
+        AdderMessage = Message('AdderMessage', [
+            ('item_a', 'H'),
+            ('item_b', 'B'),
+            ('item_c', 'B'),
+            ('item_d', 'B'),
+            ('item_e', 'B'),
+            # Note, there is no item 'e' in the list of arguments
+            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d']),
+        ])
+
+        # Test getting the correct result
+        test_data = {
+            'item_a': 2,
+            'item_b': 5,
+            'item_c': 7,
+            'item_d': 4,
+            'item_e': 6,
+        }
+
+        made = AdderMessage.make(test_data)
+        assert made.item_a == 2
+        assert made.item_b == 5
+
+        assert made.function_data == 2 + 5 + 7 + 4
+
+        # Check packing and unpacking
+        packed = AdderMessage.pack(test_data)
+        assert packed == b'\x02\x00\x05\x07\x04\x06\x12\x00\x00\x00'
+        assert packed == made.pack()
+
+        unpacked = AdderMessage.unpack(packed)
+        assert made == unpacked
+
+        # Now we modify the data we are going to unpack, and we should get an error
+        modified_packed = b'\x02\x00\x05\x07\x04\x06\x11\x11\x11\x11'
+
+        with pytest.raises(ValueError):
+            unpacked = AdderMessage.unpack(modified_packed)
+
+        AdderMessageFalse = Message('AdderMessageFalse', [
+            ('item_a', 'H'),
+            ('item_b', 'B'),
+            ('item_c', 'B'),
+            ('item_d', 'B'),
+            ('item_e', 'B'),
+            # Note, there is no item 'e' in the list of arguments
+            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d'], False),
+        ])
+
+        # Test getting the correct result
+        test_data = {
+            'item_a': 2,
+            'item_b': 5,
+            'item_c': 7,
+            'item_d': 4,
+            'item_e': 6,
+        }
+
+        made = AdderMessageFalse.make(test_data)
+        assert made.item_a == 2
+        assert made.item_b == 5
+
+        assert made.function_data == 2 + 5 + 7 + 4
+
+        # Check packing and unpacking
+        packed = AdderMessageFalse.pack(test_data)
+        assert packed == b'\x02\x00\x05\x07\x04\x06\x12\x00\x00\x00'
+        assert packed == made.pack()
+
+        unpacked = AdderMessageFalse.unpack(packed)
+        assert made == unpacked
+
+        # Now we modify the data we are going to unpack, and we should get an error
+        modified_packed = b'\x02\x00\x05\x07\x04\x06\x11\x11\x11\x11'
+
+        # This time it won't fail because we set False for this message
+        unpacked = AdderMessageFalse.unpack(modified_packed)
+        assert unpacked.item_a == 2

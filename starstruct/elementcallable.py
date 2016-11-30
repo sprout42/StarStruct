@@ -20,6 +20,7 @@ Following creating this message, you have two options:
 2. Use the function to generate a value.
 """
 
+import copy
 import struct
 
 from typing import Optional
@@ -81,7 +82,9 @@ class ElementCallable(Element):
         # TODO: Validate the object
         self._elements = msg
 
-        if not all(k in msg for k in self._func_args):
+        if not all(k in msg
+                   for k in [arg if isinstance(arg, str) else arg.decode('utf-8')
+                             for arg in self._func_args]):
             raise ValueError('Need all keys to be in the message')
 
         pass
@@ -106,6 +109,16 @@ class ElementCallable(Element):
             # it as a list... but for now I'm just going to do this
             ret = ret[0]
 
+        if self._error_on_bad_result:
+            temp_dict = copy.deepcopy(msg._asdict())
+            temp_dict.pop(self.name)
+            expected_value = self.make(temp_dict)
+            if expected_value != ret:
+                raise ValueError('Expected value was: {0}, but got: {1}'.format(
+                    expected_value,
+                    ret,
+                ))
+
         return (ret, buf[self._struct.size:])
 
     def make(self, msg):
@@ -113,7 +126,9 @@ class ElementCallable(Element):
         # If we aren't going to error on a bad result
         # and our name is in the message, just send the value
         # No need to do extra work.
-        if not self._error_on_bad_result and self.name in msg:
+        if not self._error_on_bad_result \
+                and self.name in msg \
+                and msg[self.name] is not None:
             return msg[self.name]
 
         items = []
