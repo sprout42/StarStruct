@@ -13,8 +13,11 @@ Submodules
 
 .. toctree::
 
+   starstruct.bitfield
    starstruct.element
    starstruct.elementbase
+   starstruct.elementbitfield
+   starstruct.elementcallable
    starstruct.elementconstant
    starstruct.elementdiscriminated
    starstruct.elementenum
@@ -26,6 +29,7 @@ Submodules
    starstruct.elementvariable
    starstruct.message
    starstruct.modes
+   starstruct.startuple
 
 Module contents
 ---------------

@@ -8,6 +8,8 @@ Submodules
 
    starstruct.tests.conftest
    starstruct.tests.test_elementbase
+   starstruct.tests.test_elementbitfield
+   starstruct.tests.test_elementcallable
    starstruct.tests.test_elementconstant
    starstruct.tests.test_elementenum
    starstruct.tests.test_elementfixedpoint
@@ -18,6 +20,7 @@ Submodules
    starstruct.tests.test_elementvariable
    starstruct.tests.test_length
    starstruct.tests.test_message
+   starstruct.tests.test_selfpack
 
 Module contents
 ---------------
