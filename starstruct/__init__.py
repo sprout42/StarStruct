@@ -26,6 +26,7 @@ try:
     # TODO: make this import more automatic
     from starstruct.element import Element
     from starstruct.elementbase import ElementBase
+    from starstruct.elementcallable import ElementCallable
     from starstruct.elementconstant import ElementConstant
     from starstruct.elementpad import ElementPad
     from starstruct.elementenum import ElementEnum
@@ -43,6 +44,7 @@ try:
     assert Mode
     assert Element
     assert ElementBase
+    assert ElementCallable
     assert ElementConstant
     assert ElementPad
     assert ElementEnum

@@ -320,3 +320,47 @@ class TestStarStruct(unittest.TestCase):
         with pytest.raises(ValueError):
             unpacked = TestStruct.unpack(packed_element)
             assert unpacked
+
+    def test_single_element(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            ('single_data', self.VarTest),
+        ])
+
+        test_data = {
+            'length': 2,
+            'vardata': [
+                {'x': 1, 'y': 2},
+                {'x': 3, 'y': 4},
+            ],
+            'single_data': [
+                {'x': 6, 'y': 11},
+            ],
+        }
+
+        made = TestStruct.make(test_data)
+        assert len(made.vardata) == 2
+        assert made.single_data.x == 6
+        assert made.single_data.y == 11
+
+    def test_single_element_2(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+            ('single_data', self.VarTest),
+        ])
+
+        test_data = {
+            'length': 2,
+            'vardata': [
+                {'x': 1, 'y': 2},
+                {'x': 3, 'y': 4},
+            ],
+            'single_data': {'x': 6, 'y': 11},
+        }
+
+        made = TestStruct.make(test_data)
+        assert len(made.vardata) == 2
+        assert made.single_data.x == 6
+        assert made.single_data.y == 11
