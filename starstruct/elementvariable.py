@@ -78,8 +78,10 @@ class ElementVariable(Element):
         self.name = field[0]
 
         try:
+            self.list_return = True
             self.ref = field[2]
         except IndexError:
+            self.list_return = False
             self.ref = 1
 
         # Variable elements don't use the normal struct format, the format is
@@ -219,7 +221,16 @@ class ElementVariable(Element):
 
     def make(self, msg):
         """Return the expected "made" value"""
-        ret = []
-        for val in msg[self.name]:
-            ret.append(self.format.make(val))
+        if self.list_return:
+            ret = []
+            for val in msg[self.name]:
+                ret.append(self.format.make(val))
+        else:
+            if isinstance(msg[self.name], list):
+                maker = msg[self.name][0]
+            else:
+                maker = msg[self.name]
+
+            ret = self.format.make(maker)
+
         return ret
