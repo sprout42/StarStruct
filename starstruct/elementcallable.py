@@ -11,13 +11,74 @@ Call a function to validate data.
 
     CRCedMessage = Message('CRCedMessage', [
        ('data', ExampleMessage),                    # A data field that has the example message in it
-       ('crc', 'I', crc32, ['data']),
+       ('crc', 'I', crc32, ['data']),               # Crc the data, and give an error if we have something unexpected
+       ('crc', 'I', crc32, ['data'], False),        # Crc the data, but don't give an error
    ])
 
 Following creating this message, you have two options:
 
 1. Specify a value. The function will be used to validate the value.
+
+.. code-block:: python
+
+    def adder(x, y):
+        return x + y
+
+    AdderMessage = Message('AdderMessage', [
+        ('item_a', 'H'),
+        ('item_b', 'B'),
+        ('function_data', 'I', adder, ['item_a', 'item_b']),
+    ])
+
+    test_data = {
+        'item_a': 2,
+        'item_b': 5,
+        'function_data': 7,
+    }
+
+    made = AdderMessage.make(test_data)
+    assert made.item_a == 2
+    assert made.item_b == 5
+    assert made.function_data == 7
+
+    # If you specify the wrong value, you'll get a ValueError
+    test_data = {
+        'item_a': 2,
+        'item_b': 5,
+        'function_data': 33,
+    }
+
+    try:
+        made = AdderMessage.make(test_data)
+    except ValueError:
+        print('Told you so')
+
+    # Unless you specify `False` in your original item, then
+    # nobody will care.
+
 2. Use the function to generate a value.
+
+.. code-block:: python
+
+    def adder(x, y):
+        return x + y
+
+    AdderMessage = Message('AdderMessage', [
+        ('item_a', 'H'),
+        ('item_b', 'B'),
+        ('function_data', 'I', adder, ['item_a', 'item_b']),
+    ])
+
+    test_data = {
+        'item_a': 2,
+        'item_b': 5,
+    }
+
+    made = AdderMessage.make(test_data)
+    assert made.item_a == 2
+    assert made.item_b == 5
+    assert made.function_data == 7
+
 """
 
 import copy
@@ -109,10 +170,16 @@ class ElementCallable(Element):
             # it as a list... but for now I'm just going to do this
             ret = ret[0]
 
+        # Only check for errors if they haven't told us not to
         if self._error_on_bad_result:
+            # Pretend we're getting a dictionary to make our item,
+            # but it has no reference to `self`. This is so we check
+            # for errors correctly.
             temp_dict = copy.deepcopy(msg._asdict())
             temp_dict.pop(self.name)
             expected_value = self.make(temp_dict)
+
+            # Check for an error
             if expected_value != ret:
                 raise ValueError('Expected value was: {0}, but got: {1}'.format(
                     expected_value,
