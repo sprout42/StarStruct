@@ -167,3 +167,8 @@ An example of the package can be seen below
                                                                #  Repeated(x=2, y=0),
                                                                #  Repeated(x=6, y=2)]
 
+
+
+.. image:: https://badges.gitter.im/sprout42/StarStruct.svg
+   :alt: Join the chat at https://gitter.im/sprout42/StarStruct
+   :target: https://gitter.im/sprout42/StarStruct?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
