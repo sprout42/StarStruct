@@ -3,11 +3,37 @@ import collections
 
 
 def StarTuple(name, named_fields, elements):
+    restricted_fields = {
+        # Default dunders
+        '__getnewargs__',
+        '__new__',
+        '__slots__ ',
+        '__repr__',
+
+        # Default #oneders
+        '_asdict',
+        '_make',
+        '_replace',
+
+        # Fields specifier
+        '_fields',
+
+        # Startuple additions
+        'pack',
+        '_elements',
+        '__str__',
+    }
+
+    intersection = restricted_fields.intersection(set(named_fields))
+
+    if intersection:
+        raise ValueError('Restricted field used. Bad fields: {0}'.format(intersection))
+
     named_tuple = collections.namedtuple(name, named_fields)
 
     def this_pack(self):
         packed = bytes()
-        for key, value in self.__elements.items():
+        for key, value in self._elements.items():
             packed += value.pack(self._asdict())
 
         return packed
@@ -31,6 +57,6 @@ def StarTuple(name, named_fields, elements):
 
     named_tuple.pack = this_pack
     named_tuple.__str__ = this_str
-    named_tuple.__elements = elements
+    named_tuple._elements = elements
 
     return named_tuple
