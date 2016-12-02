@@ -10,6 +10,10 @@
 .. image:: https://scrutinizer-ci.com/g/sprout42/StarStruct/badges/quality-score.png?b=master
     :target: https://scrutinizer-ci.com/g/sprout42/StarStruct/?branch=master
     :alt: Scrutinizer Code Quality
+    
+.. image:: https://badges.gitter.im/sprout42/StarStruct.svg
+   :alt: Join the chat at https://gitter.im/sprout42/StarStruct
+   :target: https://gitter.im/sprout42/StarStruct?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
 
 
 StarStruct
@@ -169,6 +173,3 @@ An example of the package can be seen below
 
 
 
-.. image:: https://badges.gitter.im/sprout42/StarStruct.svg
-   :alt: Join the chat at https://gitter.im/sprout42/StarStruct
-   :target: https://gitter.im/sprout42/StarStruct?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
