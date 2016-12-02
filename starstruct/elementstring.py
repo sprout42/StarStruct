@@ -122,7 +122,10 @@ class ElementString(Element):
             # for 'p' formats, convert to a string, but leave the padding
             val = val.decode()
         else:  # 'c'
-            val = [c.decode() for c in val]
+            # Just in case we have some ints in the message
+            val = [c.decode() if not isinstance(c, int)
+                   else chr(c)
+                   for c in val]
         return (val, unused)
 
     def make(self, msg):
