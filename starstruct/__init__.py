@@ -28,6 +28,7 @@ try:
     from starstruct.elementbase import ElementBase
     from starstruct.elementcallable import ElementCallable
     from starstruct.elementconstant import ElementConstant
+    from starstruct.elementescaped import ElementEscaped
     from starstruct.elementpad import ElementPad
     from starstruct.elementenum import ElementEnum
     from starstruct.elementbitfield import ElementBitField
@@ -46,6 +47,7 @@ try:
     assert ElementBase
     assert ElementCallable
     assert ElementConstant
+    assert ElementEscaped
     assert ElementPad
     assert ElementEnum
     assert ElementBitField

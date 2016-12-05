@@ -364,3 +364,35 @@ class TestStarStruct(unittest.TestCase):
         assert len(made.vardata) == 2
         assert made.single_data.x == 6
         assert made.single_data.y == 11
+
+    @pytest.mark.skip('Not implemented. Might not be possible')
+    def test_length_after_item(self):
+        num_repeats = 3
+
+        TestStruct = Message('TestStruct', [
+            ('vardata', self.VarTest, 'length'),
+            ('length', 'H', 'vardata'),
+            ('repeated_data', self.Repeated, num_repeats),
+        ])
+
+        test_data = {
+            'length': 2,
+            'vardata': [
+                {'x': 1, 'y': 2},
+                {'x': 3, 'y': 4},
+            ],
+            'repeated_data': [
+                {'x': 7, 'z': 13},
+                {'x': 2, 'z': 27},
+                {'x': 6, 'z': 11},
+            ],
+        }
+
+        made = TestStruct.make(test_data)
+        assert made.length == 2
+        assert made.vardata[0].x == 1
+        assert made.vardata[0].y == 2
+
+        packed = TestStruct.pack(test_data)
+        unpacked = TestStruct.unpack(packed)
+        assert unpacked
