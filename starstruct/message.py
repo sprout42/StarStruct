@@ -61,6 +61,9 @@ class Message(object):
         for elem in self._elements.values():
             elem.validate(self._elements)
 
+            # Give each element information about the other elements
+            elem._elements = self._elements
+
         # Now that the format has been validated, create a named tuple with the
         # correct fields.
         named_fields = [elem.name for elem in self._elements.values() if elem.name]

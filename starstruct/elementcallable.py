@@ -140,15 +140,10 @@ class ElementCallable(Element):
 
         All elements that are Variable must reference valid Length elements.
         """
-        # TODO: Validate the object
-        self._elements = msg
-
         if not all(k in msg
                    for k in [arg if isinstance(arg, str) else arg.decode('utf-8')
                              for arg in self._func_args]):
             raise ValueError('Need all keys to be in the message')
-
-        pass
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""
