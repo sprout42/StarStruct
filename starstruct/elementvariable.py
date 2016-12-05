@@ -107,6 +107,8 @@ class ElementVariable(Element):
             # TODO: If we add #4, then we would have to have a check here
             self.object_length = True
 
+        self._mode = mode
+        self._alignment = alignment
         self.update(mode, alignment)
 
     @staticmethod
@@ -152,9 +154,13 @@ class ElementVariable(Element):
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""
-        self._mode = mode
-        self._alignment = alignment
-        self.format.update(mode, alignment)
+        if self._mode is not None:
+            self._mode = mode
+
+        if self._alignment is not None:
+            self._alignment = alignment
+
+        self.format.update(self._mode, self._alignment)
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
@@ -198,6 +204,7 @@ class ElementVariable(Element):
         # length field to determine how many elements need unpacked.
         ret = []
         unused = buf
+
         if self.object_length:
             if self.variable_repeat:
                 msg_range = getattr(msg, self.ref)
