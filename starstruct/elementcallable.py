@@ -99,6 +99,8 @@ class ElementCallable(Element):
     :param mode: The mode in which to pack the bytes
     :param alignment: Number of bytes to align to
     """
+
+    # pylint: disable=too-many-instance-attributes
     def __init__(self, field: list, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
         # All of the type checks have already been performed by the class
         # factory
@@ -114,7 +116,7 @@ class ElementCallable(Element):
         else:
             self._error_on_bad_result = True
 
-        self._elements = None
+        self._elements = []
 
         self.update(mode, alignment)
 

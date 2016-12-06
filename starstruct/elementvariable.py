@@ -104,6 +104,7 @@ class ElementVariable(Element):
                 self.object_length = False
 
                 # Change our ref to be a string, for NamedTuple
+                # pylint: disable=no-member
                 self.ref = self.ref.decode('utf-8')
 
         else:
