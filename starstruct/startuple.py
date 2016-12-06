@@ -33,7 +33,7 @@ def StarTuple(name, named_fields, elements):
 
     def this_pack(self):
         packed = bytes()
-        for key, value in self._elements.items():
+        for _, value in self._elements.items():
             packed += value.pack(self._asdict())
 
         return packed

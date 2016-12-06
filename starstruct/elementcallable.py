@@ -114,6 +114,8 @@ class ElementCallable(Element):
         else:
             self._error_on_bad_result = True
 
+        self._elements = None
+
         self.update(mode, alignment)
 
     @property

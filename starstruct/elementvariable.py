@@ -72,6 +72,10 @@ class ElementVariable(Element):
     :param mode: The mode in which to pack the bytes
     :param alignment: Number of bytes to align to
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # We need to keep track of several different styles of output here
+
     def __init__(self, field: list, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
         # All of the type checks have already been performed by the class
         # factory
@@ -96,11 +100,12 @@ class ElementVariable(Element):
             # Determine whether bytes or objects are the measurement tool
             if isinstance(self.ref, str):
                 self.object_length = True
-            else:
+            elif isinstance(self.ref, bytes):
                 self.object_length = False
 
                 # Change our ref to be a string, for NamedTuple
                 self.ref = self.ref.decode('utf-8')
+
         else:
             self.variable_repeat = False
 

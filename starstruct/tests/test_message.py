@@ -2,11 +2,10 @@
 
 """Tests for the starstruct class"""
 
-# TODO: Remove unittest
+import enum
 import unittest
 import pytest
 
-import enum
 from starstruct.message import Message
 from starstruct.modes import Mode
 
