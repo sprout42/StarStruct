@@ -2,8 +2,9 @@
 
 """Tests for the elementstring class"""
 
-import pytest
 import unittest
+
+import pytest
 
 from starstruct.message import Message
 from starstruct.elementstring import ElementString
