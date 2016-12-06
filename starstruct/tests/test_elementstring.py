@@ -2,8 +2,10 @@
 
 """Tests for the elementstring class"""
 
+import pytest
 import unittest
 
+from starstruct.message import Message
 from starstruct.elementstring import ElementString
 
 
@@ -45,3 +47,65 @@ class TestElementString(unittest.TestCase):
             with self.subTest(field):  # pylint: disable=no-member
                 out = ElementString.valid(field)
                 self.assertFalse(out)
+
+    def test_make_andk_pack(self):
+        """Test field formats that are valid ElementString elements."""
+        TestStruct = Message('TestStruct', [
+            ('a', 'c'),     # single character
+            ('b', '2c'),    # 2 char string
+            ('c', '10s'),   # 10 char string (variable)
+            ('d', '9p'),    # 9 ( - 1 ) char string (fixed)
+            ('e', '5c'),
+        ])
+
+        test_data = {
+            'a': 'i',
+            'b': 'hi',
+            'c': 'short',
+            'd': 'long',
+            'e': ['l', 'i', 's', 't'],
+        }
+
+        made = TestStruct.make(test_data)
+
+        assert made.a == ['i']
+        assert made.b == ['h', 'i']
+        assert made.c == 'short'
+        assert made.d == 'long\x00\x00\x00\x00'
+        assert made.e == ['l', 'i', 's', 't', '\x00']
+
+        packed = TestStruct.pack(test_data)
+        unpacked = TestStruct.unpack(packed)
+
+        assert made == unpacked
+
+    def test_alignment(self):
+        """Test field formats that are valid ElementString elements."""
+        TestStruct = Message('TestStruct', [
+            ('a', 'c'),     # single character
+            ('b', '2c'),    # 2 char string
+        ])
+
+        test_data = {
+            'a': 'a',
+            'b': 'no',
+        }
+
+        TestStruct.update(alignment=4)
+        packed = TestStruct.pack(test_data)
+        assert packed == b'a\x00\x00\x00no\x00\x00'
+
+    def test_bad_values(self):
+        """Test field formats that are valid ElementString elements."""
+        TestStruct = Message('TestStruct', [
+            ('a', 'c'),     # single character
+            ('b', '2c'),    # 2 char string
+        ])
+
+        test_data = {
+            'a': [5],
+            'b': 'no',
+        }
+
+        with pytest.raises(TypeError):
+            TestStruct.make(test_data)

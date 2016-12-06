@@ -84,6 +84,7 @@ class ElementString(Element):
                 if self.format[-1] == 'p' and len(val) < size:
                     # 'p' (pascal strings) must be the exact size of the format
                     val += b'\x00' * (size - len(val))
+
             data = self._struct.pack(val)
         else:  # 'c'
             if not all(isinstance(c, bytes) for c in val):
@@ -102,7 +103,7 @@ class ElementString(Element):
         # If the data does not meet the alignment, add some padding
         missing_bytes = len(data) % self._alignment
         if missing_bytes:
-            data += b'\x00' * missing_bytes
+            data += b'\x00' * (self._alignment - missing_bytes)
         return data
 
     def unpack(self, msg, buf):
@@ -114,18 +115,17 @@ class ElementString(Element):
                                              self._alignment)
         unused = buf[struct.calcsize(self.format) + extra_bytes:]
 
-        val = ret[0]
         if self.format[-1] in 's':
             # for 's' formats, convert to a string and strip padding
-            val = val.decode().strip('\x00')
+            val = ret[0].decode().strip('\x00')
         elif self.format[-1] in 'p':
             # for 'p' formats, convert to a string, but leave the padding
-            val = val.decode()
+            val = ret[0].decode()
         else:  # 'c'
             # Just in case we have some ints in the message
             val = [c.decode() if not isinstance(c, int)
                    else chr(c)
-                   for c in val]
+                   for c in ret]
         return (val, unused)
 
     def make(self, msg):
@@ -150,12 +150,13 @@ class ElementString(Element):
 
         # 'p' (pascal strings) and 'c' (char list) must be the exact size of
         # the format
-        if self.format[-1] in ('p', 'c') and len(val) < size:
-            val += '\x00' * (size - len(val))
+        if self.format[-1] == 'p' and len(val) < size - 1:
+            val += '\x00' * (size - len(val) - 1)
 
         # Lastly, 'c' (char list) formats are expected to be a list of
         # characters rather than a string.
         if self.format[-1] == 'c':
+            val += '\x00' * (size - len(val))
             val = [c for c in val]
 
         return val

@@ -186,6 +186,7 @@ class TestStarStruct(unittest.TestCase):
     def test_unpack_little_endian(self):
         """Test unpack the test formats."""
         test_msg = Message('test', self.teststruct, Mode.Little)
+        assert test_msg.mode.to_byteorder() == 'little'
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 (unpacked_partial_msg, unused) = test_msg.unpack_partial(self.testbytes['little'][idx] + b'\xde\xad')
@@ -206,6 +207,9 @@ class TestStarStruct(unittest.TestCase):
     def test_unpack_big_endian(self):
         """Test unpack the test formats."""
         test_msg = Message('test', self.teststruct, Mode.Big)
+
+        assert test_msg.mode.to_byteorder() == 'big'
+
         for idx in range(len(self.testvalues)):
             with self.subTest(idx):  # pylint: disable=no-member
                 (unpacked_partial_msg, unused) = test_msg.unpack_partial(self.testbytes['big'][idx] + b'\xde\xad')
