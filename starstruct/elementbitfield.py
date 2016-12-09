@@ -6,6 +6,7 @@ import re
 from starstruct.element import register, Element
 from starstruct.modes import Mode
 from starstruct.bitfield import BitField
+from starstruct.packedbitfield import PackedBitField
 
 
 @register
@@ -43,11 +44,13 @@ class ElementBitField(Element):
 
         The basics have already been validated by the Element factory class,
         validate that the struct format is a valid numeric value.
+
+        Signed fields are not allowed, bit manipulation does not work well
         """
         return (len(field) == 3 and
                 isinstance(field[1], str) and
-                re.match(r'\d*[cbB?hHiIlLqQnNfdP]', field[1]) and
-                isinstance(field[2], BitField))
+                re.match(r'\d*[BHILQN]', field[1]) and
+                isinstance(field[2], (BitField, PackedBitField)))
 
     def validate(self, msg):
         """

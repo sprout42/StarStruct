@@ -23,6 +23,9 @@ try:
     from starstruct.bitfield import BitField
     assert BitField
 
+    from starstruct.packedbitfield import PackedBitField
+    assert PackedBitField
+
     # TODO: make this import more automatic
     from starstruct.element import Element
     from starstruct.elementbase import ElementBase
@@ -58,6 +61,6 @@ try:
     assert ElementVariable
     assert ElementDiscriminated
 
-    __all__ = ['Message', 'Mode', 'StarTuple', 'BitField']
+    __all__ = ['Message', 'Mode', 'StarTuple', 'BitField', 'PackedBitField']
 except ImportError:  # pragma: no cover (manual test)
     pass

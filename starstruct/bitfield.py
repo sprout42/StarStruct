@@ -1,4 +1,5 @@
 import re
+import functools
 
 
 class BitField(object):
@@ -15,46 +16,65 @@ class BitField(object):
             pass
         self.enum = enum
 
+        # Determine the bit mask and length for this bitfield
+        self.bit_mask = functools.reduce(lambda x, y: x | y, [e.value for e in self.enum])
+        self.bit_length = self.bit_mask.bit_length()
+
     def __repr__(self):
         return 'BitField({})'.format(self.enum)
 
     def __str__(self):
         return 'BitField({})'.format(self.enum)
 
+    def find_value(self, item):
+        """
+        Take a value and determine the enumeration value based on value or
+        enum memeber name.
+        """
+        # pylint: disable=too-many-branches
+        if isinstance(item, str):
+            # To make usage a bit nice/easier if the elements of the list are
+            # strings assume that they are enum names and attempt to convert
+            # them to the correct enumeration values.
+            try:
+                value = getattr(self.enum, item)
+            except AttributeError:
+                # This is the normal error to throw if the enum name is
+                # not valid for this enumeration type.
+                enum_name = re.match(r"<enum '(\S+)'>", str(self.enum)).group(1)
+                msg = '{} is not a valid {}'.format(item, enum_name)
+                raise ValueError(msg)
+        elif isinstance(item, self.enum):
+            value = item
+        else:
+            # Assume that the item is an integer value, convert it to an enum
+            # value to ensure it is a valid value for this bitfield
+            try:
+                value = self.enum(item)
+            except ValueError:
+                # This value is not a valid enumeration value
+                enum_name = re.match(r"<enum '(\S+)'>", str(self.enum)).group(1)
+                msg = '{} is not a valid {}'.format(item, enum_name)
+                raise ValueError(msg)
+
+        return value
+
     def pack(self, arg):
         """
         Take a list (or single value) and bitwise-or all the values together
         """
-        if arg:
+        value = 0
+        if arg is not None:
             # Handle a variety of inputs: list or single, enum or raw
-            if isinstance(arg, list):
+            if hasattr(arg, '__iter__'):
                 arg_list = arg
             else:
                 arg_list = [arg]
 
-            # To make usage a bit nice/easier if the elements of the list
-            # are strings assume that they are enum names and attempt to
-            # convert them to the correct enumeration values.
-            value = 0
             for item in arg_list:
-                if isinstance(item, self.enum):
-                    value |= item.value
-                elif isinstance(item, str):
-                    try:
-                        value |= getattr(self.enum, item).value
-                    except AttributeError:
-                        enum_name = re.match(r"<enum '(\S+)'>", str(self.enum)).group(1)
-                        msg = '{} is not a valid {}'.format(item, enum_name)
-                        raise ValueError(msg)
-                else:
-                    # Assume that the item is an integer value, convert it to
-                    # an enum value to ensure it is a valid value for this
-                    # bitfield.
-                    value |= self.enum(item).value
+                value |= self.find_value(item).value
 
-            return value
-        else:
-            return 0
+        return value
 
     def unpack(self, val):
         """
@@ -68,14 +88,16 @@ class BitField(object):
 
         useful for testing
         """
-        if arg:
-            # Handle the same inputs as the pack function
-            if isinstance(arg, list):
-                values = [self.enum(value) for value in arg]
+        values = []
+        if arg is not None:
+            # Handle a variety of inputs: list or single, enum or raw
+            if hasattr(arg, '__iter__'):
+                arg_list = arg
             else:
-                values = [self.enum(arg)]
-        else:
-            values = []
+                arg_list = [arg]
+
+            for item in arg_list:
+                values.append(self.find_value(item))
 
         # return this list as a frozenset
         return frozenset(values)
