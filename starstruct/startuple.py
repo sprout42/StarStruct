@@ -22,6 +22,7 @@ def StarTuple(name, named_fields, elements):
         'pack',
         '_elements',
         '__str__',
+        '_name',
     }
 
     intersection = restricted_fields.intersection(set(named_fields))
@@ -58,5 +59,6 @@ def StarTuple(name, named_fields, elements):
     named_tuple.pack = this_pack
     named_tuple.__str__ = this_str
     named_tuple._elements = elements
+    named_tuple._name = name
 
     return named_tuple

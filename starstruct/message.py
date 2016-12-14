@@ -28,7 +28,7 @@ class Message(object):
         if not name or not isinstance(name, str):
             raise TypeError('invalid name: {}'.format(name))
 
-        self.name = name
+        self._name = name
         self.mode = mode
         self.alignment = alignment
 
@@ -67,7 +67,7 @@ class Message(object):
         # Now that the format has been validated, create a named tuple with the
         # correct fields.
         named_fields = [elem.name for elem in self._elements.values() if elem.name]
-        self._tuple = StarTuple(self.name, named_fields, self._elements)
+        self._tuple = StarTuple(self._name, named_fields, self._elements)
 
     def update(self, mode=None, alignment=None):
         """ Change the mode of a message. """
