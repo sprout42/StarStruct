@@ -51,6 +51,9 @@ class TestStarStruct(unittest.TestCase):
         assert my_instance_1.pack() == my_bytes_1
         assert my_instance_2.pack() == my_bytes_2
 
+        assert my_message._name == 'MyMessage'
+        assert my_instance_1._name == 'MyMessage'
+
     def test_no_data(self):
         num_repeats = 4
 
