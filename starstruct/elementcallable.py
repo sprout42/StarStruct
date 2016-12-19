@@ -120,6 +120,8 @@ class ElementCallable(Element):
 
         self.update(mode, alignment)
 
+        self._elements = []
+
     @property
     def _struct(self):
         return struct.Struct(self._mode.value + self.format)
