@@ -7,6 +7,7 @@ from hashlib import md5
 
 from starstruct.message import Message
 
+
 class TestStarStructNone(unittest.TestCase):
     """StarStruct module tests"""
 

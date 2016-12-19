@@ -21,6 +21,7 @@ from typing import Optional
 from starstruct.element import register, Element
 from starstruct.modes import Mode
 
+
 @register
 class ElementNone(Element):
     """
