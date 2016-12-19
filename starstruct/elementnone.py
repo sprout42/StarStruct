@@ -57,7 +57,7 @@ class ElementNone(Element):
         return b''
 
     def unpack(self, msg, buf):
-        return (msg, buf)
+        return (None, buf)
 
     def make(self, msg):
         return msg[self.name]

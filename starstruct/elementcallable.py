@@ -177,9 +177,10 @@ class ElementCallable(Element):
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
         ret = self._struct.unpack_from(buf)
-        if isinstance(ret, (list, tuple)):
-            # TODO: I don't know if there is a case where we want to keep
-            # it as a list... but for now I'm just going to do this
+        if isinstance(ret, (list, tuple)) and len(ret) == 1:
+            # We only change it not to a list if we expected one value.
+            # Otherwise, we keep it as a list, because that's what we would
+            # expect (like for a 16I type of struct
             ret = ret[0]
 
         # Only check for errors if they haven't told us not to
