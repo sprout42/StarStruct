@@ -161,7 +161,18 @@ class ElementCallable(Element):
 
     def pack(self, msg):
         """Pack the provided values into the supplied buffer."""
-        return self._struct.pack(self.make(msg))
+        packer = self.make(msg)
+
+        # Test if the object is iterable
+        # If it isn't, then turn it into a list
+        try:
+            _ = (p for p in packer)
+        except TypeError:
+            packer = [packer]
+
+        # Unpack the items for struct to allow for mutli-value
+        # items to be passed in.
+        return self._struct.pack(*packer)
 
     def unpack(self, msg, buf):
         """Unpack data from the supplied buffer using the initialized format."""
