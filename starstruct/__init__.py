@@ -1,5 +1,8 @@
 """Package for StarStruct."""
 
+import importlib
+import glob
+import os
 import sys
 
 __project__ = 'StarStruct'
@@ -12,55 +15,35 @@ PYTHON_VERSION = 3, 5
 if not sys.version_info >= PYTHON_VERSION:  # pragma: no cover (manual test)
     exit("Python {}.{}+ is required.".format(*PYTHON_VERSION))
 
-try:
-    # pylint: disable=wrong-import-position
-    from starstruct.message import Message
-    from starstruct.modes import Mode
+# Import all the different elements automatically.
+# This makes sure than any new elements added are imported into the project
+# and registered.
+file_path = os.path.dirname(os.path.abspath(__file__))
 
-    from starstruct.startuple import StarTuple
-    assert StarTuple
+added_elements = []
+for f in glob.glob(file_path + '/element*'):
+    import_name = os.path.basename(f)[:-3]
+    added_elements.append(importlib.import_module('starstruct.' + import_name))
 
-    from starstruct.bitfield import BitField
-    assert BitField
 
-    from starstruct.packedbitfield import PackedBitField
-    assert PackedBitField
+# To find out which elements have been added, just uncomment this statement
+# print(added_elements)
 
-    # TODO: make this import more automatic
-    from starstruct.element import Element
-    from starstruct.elementbase import ElementBase
-    from starstruct.elementcallable import ElementCallable
-    from starstruct.elementconstant import ElementConstant
-    from starstruct.elementescaped import ElementEscaped
-    from starstruct.elementpad import ElementPad
-    from starstruct.elementenum import ElementEnum
-    from starstruct.elementbitfield import ElementBitField
-    from starstruct.elementnum import ElementNum
-    from starstruct.elementfixedpoint import ElementFixedPoint
-    from starstruct.elementstring import ElementString
-    from starstruct.elementlength import ElementLength
-    from starstruct.elementvariable import ElementVariable
-    from starstruct.elementdiscriminated import ElementDiscriminated
+# pylint: disable=wrong-import-position
+from starstruct.message import Message
+from starstruct.modes import Mode
 
-    # silence F401 flake8 error
-    assert Message
-    assert Mode
-    assert Mode
-    assert Element
-    assert ElementBase
-    assert ElementCallable
-    assert ElementConstant
-    assert ElementEscaped
-    assert ElementPad
-    assert ElementEnum
-    assert ElementBitField
-    assert ElementNum
-    assert ElementFixedPoint
-    assert ElementString
-    assert ElementLength
-    assert ElementVariable
-    assert ElementDiscriminated
+# silence F401 flake8 error
+assert Message
+assert Mode
 
-    __all__ = ['Message', 'Mode', 'StarTuple', 'BitField', 'PackedBitField']
-except ImportError:  # pragma: no cover (manual test)
-    pass
+from starstruct.startuple import StarTuple
+assert StarTuple
+
+from starstruct.bitfield import BitField
+assert BitField
+
+from starstruct.packedbitfield import PackedBitField
+assert PackedBitField
+
+__all__ = ['Message', 'Mode', 'StarTuple', 'BitField', 'PackedBitField']
