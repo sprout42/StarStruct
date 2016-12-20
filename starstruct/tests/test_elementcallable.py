@@ -26,6 +26,36 @@ class TestStarStruct(unittest.TestCase):
         ('z', 'H'),
     ])
 
+    def test_single_element_with_set(self):
+        TestStruct = Message('TestStruct', [
+            ('length_in_objects', 'H', 'vardata'),
+            ('vardata', self.VarTest, 'length_in_objects'),
+        ])
+
+        CRCedMessage = Message('CRCedMessage', [
+            ('data', TestStruct),
+            ('function_data', 'I', {
+                (crc32, b'data')
+            }),
+        ])
+
+        test_data = {
+            'data': {
+                'length_in_objects': 2,
+                'vardata': [
+                    {'x': 1, 'y': 2},
+                    {'x': 3, 'y': 4},
+                ],
+            },
+        }
+
+        made = CRCedMessage.make(test_data)
+        # assert len(made) == 5
+        assert len(made.data.vardata) == 2
+        assert made.data.vardata[0].x == 1
+        assert made.data.vardata[0].y == 2
+        assert made.function_data == crc32(TestStruct.pack(test_data['data']))
+
     def test_single_element_2(self):
         TestStruct = Message('TestStruct', [
             ('length_in_objects', 'H', 'vardata'),
@@ -34,7 +64,11 @@ class TestStarStruct(unittest.TestCase):
 
         CRCedMessage = Message('CRCedMessage', [
             ('data', TestStruct),
-            ('function_data', 'I', crc32, [b'data']),
+            ('function_data', 'I', {
+                'pack': (crc32, b'data'),
+                'make': (crc32, b'data'),
+                'unpack': (crc32, b'data'),
+            }),
         ])
 
         test_data = {
@@ -66,7 +100,9 @@ class TestStarStruct(unittest.TestCase):
         CRCedMessage = Message('TestStruct', [
             ('length_in_objects', 'H', 'vardata'),
             ('vardata', self.VarTest, 'length_in_objects'),
-            ('function_data', 'I', crc32_wrapper, [b'length_in_objects', b'vardata']),
+            ('function_data', 'I', {
+                (crc32_wrapper, b'length_in_objects', b'vardata')
+            }),
         ])
 
         test_data = {
@@ -92,7 +128,9 @@ class TestStarStruct(unittest.TestCase):
         AdderMessage = Message('AdderMessage', [
             ('item_a', 'H'),
             ('item_b', 'B'),
-            ('function_data', 'I', adder, ['item_a', 'item_b']),
+            ('function_data', 'I', {
+                (adder, 'item_a', 'item_b')
+            }),
         ])
 
         test_data = {
@@ -117,7 +155,9 @@ class TestStarStruct(unittest.TestCase):
             ('item_d', 'B'),
             ('item_e', 'B'),
             # Note, there is no item 'e' in the list of arguments
-            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d']),
+            ('function_data', 'I', {
+                (adder, 'item_a', 'item_b', 'item_c', 'item_d')
+            }),
         ])
 
         # Test getting the correct result
@@ -182,7 +222,9 @@ class TestStarStruct(unittest.TestCase):
             ('item_d', 'B'),
             ('item_e', 'B'),
             # Note, there is no item 'e' in the list of arguments
-            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d'], False),
+            ('function_data', 'I', {
+                (adder, 'item_a', 'item_b', 'item_c', 'item_d')
+            }, False),
         ])
 
         # Test with incorrect result
@@ -209,7 +251,9 @@ class TestStarStruct(unittest.TestCase):
             ('item_d', 'B'),
             ('item_e', 'B'),
             # Note, there is no item 'e' in the list of arguments
-            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d']),
+            ('function_data', 'I', {
+                (adder, 'item_a', 'item_b', 'item_c', 'item_d')
+            }),
         ])
 
         # Test getting the correct result
@@ -248,7 +292,9 @@ class TestStarStruct(unittest.TestCase):
             ('item_d', 'B'),
             ('item_e', 'B'),
             # Note, there is no item 'e' in the list of arguments
-            ('function_data', 'I', adder, ['item_a', 'item_b', 'item_c', 'item_d'], False),
+            ('function_data', 'I', {
+                (adder, 'item_a', 'item_b', 'item_c', 'item_d')
+            }, False),
         ])
 
         # Test getting the correct result

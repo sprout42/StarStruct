@@ -26,6 +26,9 @@ class TestStarStructNone(unittest.TestCase):
 
             return md5(salt + temp_md5.digest()).digest()
 
+        def pack_salt(data):
+            return md5(data).digest()
+
         TestStruct = Message('TestStruct', [
             ('length_in_objects', 'H', 'vardata'),
             ('vardata', self.VarTest, 'length_in_objects'),
@@ -34,7 +37,11 @@ class TestStarStructNone(unittest.TestCase):
         CRCedMessage = Message('CRCedMessage', [
             ('data', TestStruct),
             ('salted', None),
-            ('function_data', '16B', pseudo_salted_md5, ['salted', b'data'], False),
+            ('function_data', '16B', {
+                'make': (pseudo_salted_md5, 'salted', b'data'),
+                'pack': (pseudo_salted_md5, 'salted', b'data'),
+                'unpack': (pack_salt, b'data'),
+            }, False),
         ])
 
         test_data = {
@@ -69,6 +76,7 @@ class TestStarStructNone(unittest.TestCase):
         unpacked = CRCedMessage.unpack(no_data)
 
         assert unpacked.salted is None
+        assert unpacked.function_data == made.function_data
 
         # TEMP
         new = unpacked._replace(**{'salted': b'random_salter'})
