@@ -92,6 +92,7 @@ from starstruct.element import register, Element
 from starstruct.modes import Mode
 
 
+# pylint: disable=too-many-instance-attributes
 @register
 class ElementCallable(Element):
     """
@@ -103,7 +104,6 @@ class ElementCallable(Element):
     """
     accepted_mesages = (True, False)
 
-    # pylint: disable=too-many-instance-attributes
     def __init__(self, field: list, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
         # All of the type checks have already been performed by the class
         # factory
@@ -163,7 +163,6 @@ class ElementCallable(Element):
                     all(isinstance(val, tuple) for val in field[2])
 
         return False
-
 
     def validate(self, msg):
         """
