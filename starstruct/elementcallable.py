@@ -101,6 +101,8 @@ class ElementCallable(Element):
     :param mode: The mode in which to pack the bytes
     :param alignment: Number of bytes to align to
     """
+    accepted_mesages = (True, False)
+
     # pylint: disable=too-many-instance-attributes
     def __init__(self, field: list, mode: Optional[Mode]=Mode.Native, alignment: Optional[int]=1):
         # All of the type checks have already been performed by the class
@@ -113,14 +115,15 @@ class ElementCallable(Element):
         if isinstance(field[2], dict):
             self.ref = field[2]
 
-            self._make_func = self.ref['make'][0]
-            self._make_args = self.ref['make'][1:]
+            default_list = [None, None]
+            self._make_func = self.ref.get('make', default_list)[0]
+            self._make_args = self.ref.get('make', default_list)[1:]
 
-            self._pack_func = self.ref['pack'][0]
-            self._pack_args = self.ref['pack'][1:]
+            self._pack_func = self.ref.get('pack', default_list)[0]
+            self._pack_args = self.ref.get('pack', default_list)[1:]
 
-            self._unpack_func = self.ref['unpack'][0]
-            self._unpack_args = self.ref['unpack'][1:]
+            self._unpack_func = self.ref.get('unpack', default_list)[0]
+            self._unpack_args = self.ref.get('unpack', default_list)[1:]
         elif isinstance(field[2], set):
             instruction = field[2].copy().pop()
             self.ref = {'all': instruction}
@@ -152,7 +155,7 @@ class ElementCallable(Element):
 
         if len(field) >= 3 and isinstance(field[0], str) and isinstance(field[1], str):
             if isinstance(field[2], dict):
-                if set(field[2].keys()) == required_keys and \
+                if set(field[2].keys()) <= required_keys and \
                         all(isinstance(val, tuple) for val in field[2].values()):
                     return True
             elif isinstance(field[2], set):
@@ -171,7 +174,9 @@ class ElementCallable(Element):
         """
         for action in self.ref.values():
             for arg in action[1:]:
-                if isinstance(arg, str):
+                if arg in ElementCallable.accepted_mesages:
+                    continue
+                elif isinstance(arg, str):
                     pass
                 elif hasattr(arg, 'decode'):
                     arg = arg.decode('utf-8')
@@ -179,7 +184,7 @@ class ElementCallable(Element):
                     arg = arg.to_bytes((arg.bit_length() + 7) // 8, self._mode.to_byteorder()).decode('utf-8')
 
                 if arg not in msg:
-                    raise ValueError('Need all keys to be in the message, {0} was not found\nAction: {1} -> {2}'.format(arg, action, action[1]))
+                    raise ValueError('Need all keys to be in the message, {0} was not found\nAction: {1} -> {2}'.format(arg, action, action[1:]))
 
     def update(self, mode=None, alignment=None):
         """change the mode of the struct format"""
@@ -229,6 +234,11 @@ class ElementCallable(Element):
                     ret,
                 ))
 
+        if self.name in self._unpack_args:
+            msg = msg._replace(**{self.name: ret})
+
+        ret = self.call_func(msg, self._unpack_func, self._unpack_args, original=ret)
+
         return (ret, buf[self._struct.size:])
 
     def make(self, msg):
@@ -249,7 +259,10 @@ class ElementCallable(Element):
 
         return ret
 
-    def call_func(self, msg, func, args):
+    def call_func(self, msg, func, args, original=None):
+        if func is None:
+            return original
+
         items = self.prepare_args(msg, args)
         return func(*items)
 
