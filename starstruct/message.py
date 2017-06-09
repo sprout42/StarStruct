@@ -119,7 +119,7 @@ class Message(object):
         # Handle a positional dictionary argument as well as the more generic kwargs
         if obj and isinstance(obj, dict):
             kwargs = obj
-        return b''.join([elem.pack(kwargs) for elem in self._elements.values()])
+        return b''.join(elem.pack(kwargs) for elem in self._elements.values())
 
     def unpack_partial(self, buf):
         """

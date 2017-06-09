@@ -178,6 +178,9 @@ class ElementVariable(Element):
         if not isinstance(iterator, list):
             iterator = [iterator]
 
+        iterator = [item if not hasattr(item, '_asdict') else item._asdict()
+                    for item in iterator]
+
         if self.variable_repeat:
             if self.object_length:
                 ret = [self.format.pack(dict(elem)) if elem else self.format.pack({})

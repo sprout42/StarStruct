@@ -17,9 +17,9 @@ class Mode(enum.Enum):
         Convert a Mode to a byteorder string such as required by the
         to_bytes() or from_bytes() functions.
         """
-        if self == self.Native:
+        if self == Mode.Native:
             return sys.byteorder
-        elif self == self.Little:
+        elif self == Mode.Little:
             return 'little'
         else:  # Big or Network
             return 'big'

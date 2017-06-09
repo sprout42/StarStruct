@@ -32,6 +32,8 @@ def StarTuple(name, named_fields, elements):
 
     named_tuple = collections.namedtuple(name, named_fields)
 
+    # TODO: Auto update and replace!
+
     def this_pack(self):
         packed = bytes()
         for _, value in self._elements.items():
